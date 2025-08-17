@@ -39,4 +39,3 @@ def test_dict_d20():
 
     for value in dictionary.values():
         assert equal(value, 0.05)
-

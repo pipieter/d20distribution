@@ -3,8 +3,6 @@ import itertools
 import math
 from typing import Callable, Iterable
 
-from .errors import InvalidOperationError
-
 
 class DiceDistribution(object):
     values: list[int]

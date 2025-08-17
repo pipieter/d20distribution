@@ -7,6 +7,7 @@ class DiceParseError(Exception):
     def __init__(self, msg: str) -> None:
         super().__init__(msg)
 
+
 class InvalidOperationError(Exception):
     """An invalid operation was found."""
 
