@@ -69,6 +69,9 @@ def calculate_dice_distribution(
 def calculate_dice_distribution_directly(
     num: int, sides: int, operations: list[d20.ast.SetOperator]
 ) -> DiceDistribution:
+    # A limit is set to avoid extensive calculations. This function calculates the
+    # odds of each possibility individually, which can grow exponentially for
+    # a large number of dice.
     if sides**num > 8192:
         raise InvalidOperationError(f"Modified dice are too large to calculate.")
 
