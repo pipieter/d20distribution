@@ -8,7 +8,13 @@ from .limits import DICE_LIMITS, MODIFIED_DICE_LIMITS
 
 def parse(expression: str) -> DiceDistribution:
     # Attempt a roll first, to verify that the rolls are actually feasible
-    d20.roll(expression)
+    try:
+        d20.roll(expression)
+    except d20.errors.RollSyntaxError:
+        raise DiceParseError("There was a syntax error found while parsing the expression.")
+    except Exception:
+        raise DiceParseError("There was an error found while parsing the expression.")
+
 
     ast = d20.parse(expression, allow_comments=False)
     return parse_ast(ast)
