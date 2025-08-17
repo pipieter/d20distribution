@@ -1,0 +1,22 @@
+[project]
+name = "d20distribution"
+version = "0.0.1"
+authors = [{ name = "Pim Pieters", email = "pim@pieters.tv" }]
+description = "Distribution calculator based on d20 syntax"
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+requires-python = ">=3.9"
+dependencies = ["d20>=1.1.2"]
+
+[project.urls]
+Homepage = "https://github.com/pipieter/d20distribution"
+Issues = "https://github.com/pipieter/d20distribution/issues"
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
