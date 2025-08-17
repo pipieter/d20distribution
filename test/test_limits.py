@@ -9,7 +9,7 @@ def test_limits():
     # These limits are defined in d20distribution.limits, and are
     # different for modified dice and non-modified dice.
 
-    parse("50d50") # Unmodified
+    parse("50d50")  # Unmodified
     parse("4d6kh3")  # Modified, 1296 possibilities
 
     with pytest.raises(InvalidOperationError):

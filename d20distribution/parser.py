@@ -59,7 +59,7 @@ def calculate_dice_distribution(
     if len(operations) > 0:
         return calculate_dice_distribution_directly(num, sides, operations)
 
-    if sides**num > DICE_LIMITS:
+    if sides * num > DICE_LIMITS:
         raise InvalidOperationError(f"Dice are too large to calculate.")
 
     distribution = DiceDistribution({})
