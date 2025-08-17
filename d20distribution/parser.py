@@ -95,7 +95,7 @@ def calculate_dice_distribution_directly(
             value = operation.sels[0].num
             possibilities = map(lambda pos: apply_max(pos, value), possibilities)
         else:
-            raise InvalidOperationError(f"Unsupported dice modifier '{operation.op}'")
+            raise InvalidOperationError(f"Unsupported dice modifier '{operation.op}'.")
 
     values = list(map(sum, possibilities))
     keys = set(values)
@@ -127,7 +127,7 @@ def apply_keep(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:
         possibility = possibility[: selector.num]
         return tuple(possibility)
 
-    raise InvalidOperationError(f"Invalid keep modifier selector '{selector.cat}'")
+    raise InvalidOperationError(f"Invalid keep modifier selector '{selector.cat}'.")
 
 
 def apply_drop(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:
@@ -155,7 +155,7 @@ def apply_drop(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:
         possibility = possibility[selector.num :]
         return tuple(possibility)
 
-    raise InvalidOperationError(f"Invalid drop modifier selector '{selector.cat}'")
+    raise InvalidOperationError(f"Invalid drop modifier selector '{selector.cat}'.")
 
 
 def apply_min(possibility: tuple, min_value: tuple) -> tuple:
