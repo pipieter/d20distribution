@@ -1,6 +1,6 @@
 # d20distribution
 
-Dice rolling distribution calculator based on [d20](https://pypi.org/project/d20/) syntax. Given a valid expression,
+Dice rolling distribution calculator based on [d20](https://pypi.org/project/d20/) syntax. Given a valid expression, it calculates the odds of each possible result value being rolled.
 
 ## How to use
 
