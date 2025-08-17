@@ -3,6 +3,7 @@ import d20
 
 from .distribution import DiceDistribution
 from .errors import DiceParseError, InvalidOperationError
+from .limits import DICE_LIMITS, MODIFIED_DICE_LIMITS
 
 
 def parse(expression: str) -> DiceDistribution:
@@ -58,6 +59,9 @@ def calculate_dice_distribution(
     if len(operations) > 0:
         return calculate_dice_distribution_directly(num, sides, operations)
 
+    if sides**num > DICE_LIMITS:
+        raise InvalidOperationError(f"Dice are too large to calculate.")
+
     distribution = DiceDistribution({})
     for _ in range(num):
         distribution = distribution + DiceDistribution(
@@ -72,7 +76,7 @@ def calculate_dice_distribution_directly(
     # A limit is set to avoid extensive calculations. This function calculates the
     # odds of each possibility individually, which can grow exponentially for
     # a large number of dice.
-    if sides**num > 8192:
+    if sides**num > MODIFIED_DICE_LIMITS:
         raise InvalidOperationError(f"Modified dice are too large to calculate.")
 
     possibilities = itertools.product(range(1, sides + 1), repeat=num)

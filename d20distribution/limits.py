@@ -1,0 +1,2 @@
+DICE_LIMITS = 101**101  # Allow 100d100, but nothing more
+MODIFIED_DICE_LIMITS = 8192
