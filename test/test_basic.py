@@ -12,10 +12,10 @@ def test_d20():
     distribution = parse("1d20")
     assert distribution.min() == 1
     assert distribution.max() == 20
-    assert len(distribution.values) == 20
+    assert len(distribution.dist) == 20
 
     for d in range(distribution.min(), distribution.max() + 1):
-        assert distribution.values.count(d) == 1
+        assert equal(distribution.get(d), 0.05)
 
 
 def test_exceptions():
@@ -24,18 +24,3 @@ def test_exceptions():
 
     with pytest.raises(d20.errors.RollSyntaxError):
         parse("1d20 +")
-
-
-def test_dict():
-    distribution = parse("3d6+5")
-    dictionary = distribution.to_dict()
-
-    assert set(distribution.keys()) == set(dictionary.keys())
-
-
-def test_dict_d20():
-    distribution = parse("1d20")
-    dictionary = distribution.to_dict()
-
-    for value in dictionary.values():
-        assert equal(value, 0.05)

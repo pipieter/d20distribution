@@ -55,6 +55,23 @@ def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
 def calculate_dice_distribution(
     num: int, sides: int, operations: list[d20.ast.SetOperator]
 ) -> DiceDistribution:
+    if len(operations) > 0:
+        return calculate_dice_distribution_directly(num, sides, operations)
+
+    distribution = DiceDistribution({})
+    for _ in range(num):
+        distribution = distribution + DiceDistribution(
+            {k: 1 / sides for k in range(1, sides + 1)}
+        )
+    return distribution
+
+
+def calculate_dice_distribution_directly(
+    num: int, sides: int, operations: list[d20.ast.SetOperator]
+) -> DiceDistribution:
+    if sides**num > 8192:
+        raise InvalidOperationError(f"Modified dice are too large to calculate.")
+
     possibilities = itertools.product(range(1, sides + 1), repeat=num)
 
     for operation in operations:
@@ -73,8 +90,9 @@ def calculate_dice_distribution(
         else:
             raise InvalidOperationError(f"Unsupported dice modifier '{operation.op}'")
 
-    values = [sum(pos) for pos in possibilities]
-    return DiceDistribution(values)
+    values = list(map(sum, possibilities))
+    keys = set(values)
+    return DiceDistribution({key: values.count(key) / len(values) for key in keys})
 
 
 def apply_keep(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:

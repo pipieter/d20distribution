@@ -9,7 +9,6 @@ def equal(a: float, b: float, epsilon=1e-6) -> bool:
 
 def test_modifiers_kh():
     distribution = parse("4d6kh2")
-    dictionary = distribution.to_dict()
 
     # Odds based on anydice.com
     odds = [
@@ -26,13 +25,12 @@ def test_modifiers_kh():
         (12, 13.19),
     ]
     for value, chance in odds:
-        assert equal(chance, 100 * dictionary.get(value), 0.01)
+        assert equal(chance, 100 * distribution.get(value), 0.01)
 
 
 def test_modifiers_pl():
     # Equivalent to kh2
     distribution = parse("4d6pl2")
-    dictionary = distribution.to_dict()
 
     # Odds based on anydice.com
     odds = [
@@ -49,12 +47,11 @@ def test_modifiers_pl():
         (12, 13.19),
     ]
     for value, chance in odds:
-        assert equal(chance, 100 * dictionary.get(value), 0.01)
+        assert equal(chance, 100 * distribution.get(value), 0.01)
 
 
 def test_modifiers_kl():
     distribution = parse("4d6kl2")
-    dictionary = distribution.to_dict()
 
     # Odds based on anydice.com
     odds = [
@@ -71,12 +68,11 @@ def test_modifiers_kl():
         (12, 0.08),
     ]
     for value, chance in odds:
-        assert equal(chance, 100 * dictionary.get(value), 0.01)
+        assert equal(chance, 100 * distribution.get(value), 0.01)
 
 
 def test_modifiers_ph():
     distribution = parse("4d6ph2")
-    dictionary = distribution.to_dict()
 
     # Odds based on anydice.com
     odds = [
@@ -93,7 +89,7 @@ def test_modifiers_ph():
         (12, 0.08),
     ]
     for value, chance in odds:
-        assert equal(chance, 100 * dictionary.get(value), 0.01)
+        assert equal(chance, 100 * distribution.get(value), 0.01)
 
 
 def test_modifiers_rr_unsupported():
