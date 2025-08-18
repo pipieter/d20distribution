@@ -93,7 +93,7 @@ class DiscreteDiceDistributionBuilder(object):
         distribution = defaultdict(float)
         for key, value in self.dist.items():
             distribution[sum(key)] += value
-        return DiceDistribution(dict(self.dist))
+        return DiceDistribution(dict(distribution))
 
     def transform_keys(self, transform: Callable[[tuple], tuple]) -> None:
         distribution = defaultdict(float)
