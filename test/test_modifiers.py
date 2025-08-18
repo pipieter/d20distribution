@@ -7,6 +7,20 @@ def equal(a: float, b: float, epsilon=1e-6) -> bool:
     return abs(a - b) <= epsilon
 
 
+def test_mi():
+    distribution = parse("1d6mi3")
+
+    # Odds based on anydice.com
+    odds = [
+        (3, 50.00),
+        (4, 16.67),
+        (5, 16.67),
+        (6, 16.67),
+    ]
+    for value, chance in odds:
+        assert equal(chance, 100 * distribution.get(value), 0.01)
+
+
 def test_modifiers_kh():
     distribution = parse("4d6kh2")
 

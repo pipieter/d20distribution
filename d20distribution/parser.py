@@ -1,3 +1,5 @@
+from collections import defaultdict
+from collections.abc import Callable
 import itertools
 import d20
 
@@ -11,10 +13,11 @@ def parse(expression: str) -> DiceDistribution:
     try:
         d20.roll(expression)
     except d20.errors.RollSyntaxError:
-        raise DiceParseError("There was a syntax error found while parsing the expression.")
+        raise DiceParseError(
+            "There was a syntax error found while parsing the expression."
+        )
     except Exception:
         raise DiceParseError("There was an error found while parsing the expression.")
-
 
     ast = d20.parse(expression, allow_comments=False)
     return parse_ast(ast)
@@ -76,6 +79,30 @@ def calculate_dice_distribution(
     return distribution
 
 
+class DiscreteDiceDistributionBuilder(object):
+    dist: defaultdict[tuple, float]
+
+    def __init__(self):
+        self.dist = defaultdict(float)
+
+    def add(self, key: tuple, value: float) -> None:
+        key = tuple(sorted(key))
+        self.dist[key] += value
+
+    def build(self) -> "DiceDistribution":
+        distribution = defaultdict(float)
+        for key, value in self.dist.items():
+            distribution[sum(key)] += value
+        return DiceDistribution(dict(self.dist))
+
+    def transform_keys(self, transform: Callable[[tuple], tuple]) -> None:
+        distribution = defaultdict(float)
+        for key, value in self.dist.items():
+            new_key = transform(key)
+            distribution[new_key] += value
+        self.dist = distribution
+
+
 def calculate_dice_distribution_directly(
     num: int, sides: int, operations: list[d20.ast.SetOperator]
 ) -> DiceDistribution:
@@ -85,27 +112,25 @@ def calculate_dice_distribution_directly(
     if sides**num > MODIFIED_DICE_LIMITS:
         raise InvalidOperationError(f"Modified dice are too large to calculate.")
 
-    possibilities = itertools.product(range(1, sides + 1), repeat=num)
+    possibilities = sides**num
+    products = itertools.product(range(1, sides + 1), repeat=num)
+    distribution = DiscreteDiceDistributionBuilder()
+    for product in products:
+        distribution.add(tuple(product), 1 / possibilities)
 
-    for operation in operations:
-        if operation.op == "k":
-            sel = operation.sels[0]
-            possibilities = map(lambda pos: apply_keep(pos, sel), possibilities)
-        elif operation.op == "p":
-            sel = operation.sels[0]
-            possibilities = map(lambda pos: apply_drop(pos, sel), possibilities)
-        elif operation.op == "mi":
-            value = operation.sels[0].num
-            possibilities = map(lambda pos: apply_min(pos, value), possibilities)
-        elif operation.op == "ma":
-            value = operation.sels[0].num
-            possibilities = map(lambda pos: apply_max(pos, value), possibilities)
+    for op in operations:
+        if op.op == "k":
+            distribution.transform_keys(lambda k: apply_keep(k, op.sels[0]))
+        elif op.op == "p":
+            distribution.transform_keys(lambda k: apply_drop(k, op.sels[0]))
+        elif op.op == "mi":
+            distribution.transform_keys(lambda k: apply_min(k, op.sels[0].num))
+        elif op.op == "ma":
+            distribution.transform_keys(lambda k: apply_max(k, op.sels[0].num))
         else:
-            raise InvalidOperationError(f"Unsupported dice modifier '{operation.op}'.")
+            raise InvalidOperationError(f"Unsupported dice modifier '{op.op}'.")
 
-    values = list(map(sum, possibilities))
-    keys = set(values)
-    return DiceDistribution({key: values.count(key) / len(values) for key in keys})
+    return distribution.build()
 
 
 def apply_keep(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:
@@ -164,9 +189,9 @@ def apply_drop(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:
     raise InvalidOperationError(f"Invalid drop modifier selector '{selector.cat}'.")
 
 
-def apply_min(possibility: tuple, min_value: tuple) -> tuple:
+def apply_min(possibility: tuple, min_value: int) -> tuple:
     return tuple([value if value >= min_value else min_value for value in possibility])
 
 
-def apply_max(possibility: tuple, max_value: tuple) -> tuple:
+def apply_max(possibility: tuple, max_value: int) -> tuple:
     return tuple([value if value <= max_value else max_value for value in possibility])

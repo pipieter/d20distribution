@@ -2,7 +2,7 @@ import d20
 import pytest
 
 from d20distribution import parse
-
+from d20distribution.errors import DiceParseError
 
 def equal(a: float, b: float, epsilon=1e-6) -> bool:
     return abs(a - b) <= epsilon
@@ -22,5 +22,5 @@ def test_exceptions():
     with pytest.raises(ZeroDivisionError):
         parse("1d6 / 0")
 
-    with pytest.raises(d20.errors.RollSyntaxError):
+    with pytest.raises(DiceParseError):
         parse("1d20 +")
