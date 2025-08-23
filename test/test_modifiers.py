@@ -110,3 +110,76 @@ def test_modifiers_rr_unsupported():
     # rr is currently unsupported
     with pytest.raises(InvalidOperationError):
         parse("1d20rr1")
+
+
+def test_ro_1():
+    distribution = parse("1d4ro1")
+
+    odds = [(1, 0.0625), (2, 0.3125), (3, 0.3125), (4, 0.3125)]
+
+    for value, chance in odds:
+        assert equal(chance, distribution.get(value), 0.0001)
+
+
+def test_ro_2():
+    distribution = parse("2d12rol1")
+
+    # Odds based on anydice.com
+    odds = [
+        (2, 0.06),
+        (3, 0.23),
+        (4, 0.52),
+        (5, 0.93),
+        (6, 1.45),
+        (7, 2.08),
+        (8, 2.84),
+        (9, 3.70),
+        (10, 4.69),
+        (11, 5.79),
+        (12, 7.00),
+        (13, 8.33),
+        (14, 8.28),
+        (15, 8.10),
+        (16, 7.81),
+        (17, 7.41),
+        (18, 6.89),
+        (19, 6.25),
+        (20, 5.50),
+        (21, 4.63),
+        (22, 3.65),
+        (23, 2.55),
+        (24, 1.33),
+    ]
+
+    for value, chance in odds:
+        assert equal(chance, 100 * distribution.get(value), 0.01)
+
+
+def test_chain():
+    distribution = parse("2d12rol1mi3")
+
+    # Odds based on anydice.com
+    odds = [
+        (6, 1.56),
+        (7, 1.74),
+        (8, 2.49),
+        (9, 3.36),
+        (10, 4.34),
+        (11, 5.44),
+        (12, 6.66),
+        (13, 7.99),
+        (14, 9.43),
+        (15, 11.00),
+        (16, 7.81),
+        (17, 7.41),
+        (18, 6.89),
+        (19, 6.25),
+        (20, 5.50),
+        (21, 4.63),
+        (22, 3.65),
+        (23, 2.55),
+        (24, 1.33),
+    ]
+
+    for value, chance in odds:
+        assert equal(chance, 100 * distribution.get(value), 0.01)
