@@ -89,6 +89,16 @@ class DiscreteDiceDistributionBuilder(object):
         key = tuple(sorted(key))
         self.dist[key] += value
 
+    def get(self, key: tuple) -> float:
+        key = tuple(sorted(key))
+        return self.dist[key]
+
+    def keys(self) -> float:
+        return self.dist.keys()
+
+    def values(self) -> float:
+        return self.dist.values()
+
     def build(self) -> "DiceDistribution":
         distribution = defaultdict(float)
         for key, value in self.dist.items():
@@ -120,78 +130,145 @@ def calculate_dice_distribution_directly(
 
     for op in operations:
         if op.op == "k":
-            distribution.transform_keys(lambda k: apply_keep(k, op.sels[0]))
+            distribution.transform_keys(lambda k: apply_keep_to_key(k, op.sels[0]))
         elif op.op == "p":
-            distribution.transform_keys(lambda k: apply_drop(k, op.sels[0]))
+            distribution.transform_keys(lambda k: apply_drop_to_key(k, op.sels[0]))
         elif op.op == "mi":
-            distribution.transform_keys(lambda k: apply_min(k, op.sels[0].num))
+            distribution.transform_keys(lambda k: apply_min_to_key(k, op.sels[0].num))
         elif op.op == "ma":
-            distribution.transform_keys(lambda k: apply_max(k, op.sels[0].num))
+            distribution.transform_keys(lambda k: apply_max_to_key(k, op.sels[0].num))
+        elif op.op == "ro":
+            distribution = apply_ro(distribution, sides, op.sels[0])
         else:
             raise InvalidOperationError(f"Unsupported dice modifier '{op.op}'.")
 
     return distribution.build()
 
 
-def apply_keep(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:
+def apply_keep_to_key(key: tuple, selector: d20.ast.SetSelector) -> tuple:
     if selector.cat is None:
         # Keep all values matching exactly selector.num
-        return tuple([p for p in possibility if p == selector.num])
+        return tuple([p for p in key if p == selector.num])
 
     if selector.cat == "<":
         # Keep all values smaller than selector.num
-        return tuple([p for p in possibility if p < selector.num])
+        return tuple([p for p in key if p < selector.num])
 
     if selector.cat == ">":
         # Keep all values greater than selector.num
-        return tuple([p for p in possibility if p > selector.num])
+        return tuple([p for p in key if p > selector.num])
 
     if selector.cat == "l":
         # Keep lowest selector.num values
-        possibility = list(sorted(list(possibility), reverse=False))
-        possibility = possibility[: selector.num]
-        return tuple(possibility)
+        key = list(sorted(list(key), reverse=False))
+        key = key[: selector.num]
+        return tuple(key)
 
     if selector.cat == "h":
         # Keep highest selector.num values
-        possibility = list(sorted(list(possibility), reverse=True))
-        possibility = possibility[: selector.num]
-        return tuple(possibility)
+        key = list(sorted(list(key), reverse=True))
+        key = key[: selector.num]
+        return tuple(key)
 
     raise InvalidOperationError(f"Invalid keep modifier selector '{selector.cat}'.")
 
 
-def apply_drop(possibility: tuple, selector: d20.ast.SetSelector) -> tuple:
+def apply_drop_to_key(key: tuple, selector: d20.ast.SetSelector) -> tuple:
     if selector.cat is None:
         # Drop all values matching exactly selector.num
-        return tuple([p for p in possibility if p != selector.num])
+        return tuple([p for p in key if p != selector.num])
 
     if selector.cat == "<":
         # Drop all values smaller than selector.num
-        return tuple([p for p in possibility if p >= selector.num])
+        return tuple([p for p in key if p >= selector.num])
 
     if selector.cat == ">":
         # Drop all values greater than selector.num
-        return tuple([p for p in possibility if p <= selector.num])
+        return tuple([p for p in key if p <= selector.num])
 
     if selector.cat == "l":
         # Drop lowest selector.num values
-        possibility = list(sorted(list(possibility), reverse=False))
-        possibility = possibility[selector.num :]
-        return tuple(possibility)
+        key = list(sorted(list(key), reverse=False))
+        key = key[selector.num :]
+        return tuple(key)
 
     if selector.cat == "h":
         # Drop highest selector.num values
-        possibility = list(sorted(list(possibility), reverse=True))
-        possibility = possibility[selector.num :]
-        return tuple(possibility)
+        key = list(sorted(list(key), reverse=True))
+        key = key[selector.num :]
+        return tuple(key)
 
     raise InvalidOperationError(f"Invalid drop modifier selector '{selector.cat}'.")
 
 
-def apply_min(possibility: tuple, min_value: int) -> tuple:
-    return tuple([value if value >= min_value else min_value for value in possibility])
+def apply_min_to_key(key: tuple, min_value: int) -> tuple:
+    return tuple([value if value >= min_value else min_value for value in key])
 
 
-def apply_max(possibility: tuple, max_value: int) -> tuple:
-    return tuple([value if value <= max_value else max_value for value in possibility])
+def apply_max_to_key(key: tuple, max_value: int) -> tuple:
+    return tuple([value if value <= max_value else max_value for value in key])
+
+
+def apply_ro(
+    distribution: DiscreteDiceDistributionBuilder,
+    sides: int,
+    selector: d20.ast.SetSelector,
+) -> DiscreteDiceDistributionBuilder:
+    newdist = DiscreteDiceDistributionBuilder()
+    for key in distribution.keys():
+        odds = distribution.get(key)
+        rerolls = get_reroll_dice_possibilities(key, sides, selector.cat, selector.num)
+        for reroll in rerolls:
+            newdist.add(reroll, odds / len(rerolls))
+
+    # Assert distribution is also normalized
+    assert abs(sum(newdist.values()) - 1) < 1e-6
+
+    return newdist
+
+
+def get_reroll_dice_possibilities(
+    dice: tuple, sides: int, category: str | None, num: int
+) -> list[tuple]:
+    if len(dice) == 0:
+        return [()]
+
+    # Handle h and l separately, as they depend on the dice ordering
+    if category in ["h", "l"]:
+        if num <= 0:
+            return [dice]
+
+        if category == "h":
+            dice = tuple(sorted(dice, reverse=True))
+        else:
+            dice = tuple(sorted(dice, reverse=False))
+
+        _, *rest = dice
+        combinations = get_reroll_dice_possibilities(
+            tuple(rest), sides, category, num - 1
+        )
+        outcomes: list[tuple] = []
+
+        for combination in combinations:
+            for roll in range(1, sides + 1):
+                outcomes.append((roll,) + combination)
+
+        return outcomes
+
+    first, *rest = dice
+    combinations = get_reroll_dice_possibilities(tuple(rest), sides, category, num)
+    outcomes = []
+
+    if (
+        (category is None and first == num)
+        or (category == ">" and first > num)
+        or (category == "<" and first < num)
+    ):
+        for combination in combinations:
+            for roll in range(1, sides + 1):
+                outcomes.append((roll,) + combination)
+    else:
+        for combination in combinations:
+            outcomes.append((first,) + combination)
+
+    return outcomes
