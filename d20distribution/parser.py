@@ -93,7 +93,7 @@ class DiscreteDiceDistributionBuilder(object):
         key = tuple(sorted(key))
         return self.dist[key]
 
-    def keys(self) -> float:
+    def keys(self) -> list[tuple]:
         return self.dist.keys()
 
     def values(self) -> float:
@@ -139,6 +139,8 @@ def calculate_dice_distribution_directly(
             distribution.transform_keys(lambda k: apply_max_to_key(k, op.sels[0].num))
         elif op.op == "ro":
             distribution = apply_ro(distribution, sides, op.sels[0])
+        elif op.op == "e":
+            distribution = apply_explode(distribution, op.sels[0].num)
         else:
             raise InvalidOperationError(f"Unsupported dice modifier '{op.op}'.")
 
@@ -226,7 +228,6 @@ def apply_ro(
 
     return newdist
 
-
 def get_reroll_dice_possibilities(
     dice: tuple, sides: int, category: str | None, num: int
 ) -> list[tuple]:
@@ -272,3 +273,30 @@ def get_reroll_dice_possibilities(
             outcomes.append((first,) + combination)
 
     return outcomes
+
+def apply_explode(
+    distribution: DiscreteDiceDistributionBuilder,
+    explode_value: int,
+    base_odds: float = 1.0,
+    base_key: tuple = ()
+) -> DiscreteDiceDistributionBuilder:
+    newdist = DiscreteDiceDistributionBuilder()
+
+    for key in distribution.keys():
+        odds = distribution.get(key)
+
+        new_key = base_key + key
+        new_odds = base_odds * odds
+
+        if new_odds < 1e-6:
+            return newdist
+
+        if sum(new_key) == explode_value:
+            explode_value += new_key[-1]
+            exploded = apply_explode(distribution, explode_value, new_odds, new_key)
+            for key in exploded.keys():
+                newdist.add(key, exploded.get(key))
+        else:
+            newdist.add(new_key, new_odds)
+
+    return newdist
