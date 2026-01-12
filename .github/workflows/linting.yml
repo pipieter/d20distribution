@@ -1,0 +1,63 @@
+name: LINT
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.py"
+      - "pyproject.toml"
+  workflow_dispatch:
+
+jobs:
+  flake8-lint:
+    runs-on: ubuntu-latest
+    name: flake8
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v4
+
+      - name: flake8 Lint
+        uses: py-actions/flake8@v2
+        with:
+          ignore: "W503"
+          max-line-length: 999
+          path: d20distribution test
+
+  black-lint:
+    runs-on: ubuntu-latest
+    name: black
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v4
+
+      - name: Install Black
+        run: pip install black
+
+      - name: Black linter
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose d20distribution test"
+
+  pyright:
+    runs-on: ubuntu-latest
+    name: pyright
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - name: pyright
+        uses: jakebailey/pyright-action@v2
+
+  isort:
+    runs-on: ubuntu-latest
+    name: isort
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - uses: isort/isort-action@master
+        with:
+            requirementsFiles: "requirements.txt requirements-test.txt"
