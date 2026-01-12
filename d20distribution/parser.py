@@ -1,6 +1,7 @@
+import itertools
 from collections import defaultdict
 from collections.abc import Callable
-import itertools
+
 import d20
 
 from .distribution import DiceDistribution
@@ -13,9 +14,7 @@ def parse(expression: str) -> DiceDistribution:
     try:
         d20.roll(expression)
     except d20.errors.RollSyntaxError:
-        raise DiceParseError(
-            "There was a syntax error found while parsing the expression."
-        )
+        raise DiceParseError("There was a syntax error found while parsing the expression.")
     except Exception:
         raise DiceParseError("There was an error found while parsing the expression.")
 
@@ -52,9 +51,7 @@ def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
         return calculate_dice_distribution(ast.num, ast.size, [])
 
     if isinstance(ast, d20.ast.OperatedDice):
-        return calculate_dice_distribution(
-            ast.value.num, ast.value.size, ast.operations
-        )
+        return calculate_dice_distribution(ast.value.num, ast.value.size, ast.operations)
 
     if isinstance(ast, d20.ast.Parenthetical):
         return parse_ast(ast.value)
@@ -62,9 +59,7 @@ def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
     raise DiceParseError(f"Unsupported node type '{type(ast)}'.")
 
 
-def calculate_dice_distribution(
-    num: int, sides: int, operations: list[d20.ast.SetOperator]
-) -> DiceDistribution:
+def calculate_dice_distribution(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
     if len(operations) > 0:
         return calculate_dice_distribution_directly(num, sides, operations)
 
@@ -73,9 +68,7 @@ def calculate_dice_distribution(
 
     distribution = DiceDistribution({})
     for _ in range(num):
-        distribution = distribution + DiceDistribution(
-            {k: 1 / sides for k in range(1, sides + 1)}
-        )
+        distribution = distribution + DiceDistribution({k: 1 / sides for k in range(1, sides + 1)})
     return distribution
 
 
@@ -113,9 +106,7 @@ class DiscreteDiceDistributionBuilder(object):
         self.dist = distribution
 
 
-def calculate_dice_distribution_directly(
-    num: int, sides: int, operations: list[d20.ast.SetOperator]
-) -> DiceDistribution:
+def calculate_dice_distribution_directly(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
     # A limit is set to avoid extensive calculations. This function calculates the
     # odds of each possibility individually, which can grow exponentially for
     # a large number of dice.
@@ -228,9 +219,8 @@ def apply_ro(
 
     return newdist
 
-def get_reroll_dice_possibilities(
-    dice: tuple, sides: int, category: str | None, num: int
-) -> list[tuple]:
+
+def get_reroll_dice_possibilities(dice: tuple, sides: int, category: str | None, num: int) -> list[tuple]:
     if len(dice) == 0:
         return [()]
 
@@ -245,9 +235,7 @@ def get_reroll_dice_possibilities(
             dice = tuple(sorted(dice, reverse=False))
 
         _, *rest = dice
-        combinations = get_reroll_dice_possibilities(
-            tuple(rest), sides, category, num - 1
-        )
+        combinations = get_reroll_dice_possibilities(tuple(rest), sides, category, num - 1)
         outcomes: list[tuple] = []
 
         for combination in combinations:
@@ -260,11 +248,7 @@ def get_reroll_dice_possibilities(
     combinations = get_reroll_dice_possibilities(tuple(rest), sides, category, num)
     outcomes = []
 
-    if (
-        (category is None and first == num)
-        or (category == ">" and first > num)
-        or (category == "<" and first < num)
-    ):
+    if (category is None and first == num) or (category == ">" and first > num) or (category == "<" and first < num):
         for combination in combinations:
             for roll in range(1, sides + 1):
                 outcomes.append((roll,) + combination)
@@ -274,11 +258,9 @@ def get_reroll_dice_possibilities(
 
     return outcomes
 
+
 def apply_explode(
-    distribution: DiscreteDiceDistributionBuilder,
-    explode_value: int,
-    base_odds: float = 1.0,
-    base_key: tuple = ()
+    distribution: DiscreteDiceDistributionBuilder, explode_value: int, base_odds: float = 1.0, base_key: tuple = ()
 ) -> DiscreteDiceDistributionBuilder:
     newdist = DiscreteDiceDistributionBuilder()
 

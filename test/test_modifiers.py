@@ -1,4 +1,5 @@
 import pytest
+
 from d20distribution import parse
 from d20distribution.errors import InvalidOperationError
 
