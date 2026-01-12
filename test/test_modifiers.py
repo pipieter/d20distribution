@@ -163,8 +163,7 @@ def test_e():
     for value in distribution.keys():
         depth = (value - 1) // sides + 1
         chance = base_chance**depth
-
-        assert abs(chance - distribution.get(value)) < 1e-7
+        assert equal(chance, distribution.get(value))
 
 
 def test_e_2():
@@ -233,6 +232,55 @@ def test_e_3():
         assert equal(chance, 100 * distribution.get(value), 0.001)
 
     assert equal(odds[-1][1], 100 * distribution.get_at_least(odds[-1][0]), 0.001)
+
+
+def test_e_gt():
+    # anydice.com can't generate accurate test data for this, thus we do an estimate test to see that the base is correct.
+    sides = 8
+    threshold = 4
+    distribution = parse(f"1d{sides}e>{threshold}")
+
+    base_odds = 1 / sides
+    for i in range(1, threshold):
+        actual = distribution.get(i)
+        assert equal(base_odds, actual, 0.001), f"Result {i} should stay at base odds ({base_odds}), but was {actual}."
+
+    gap_value = threshold + 1
+    actual_gap = distribution.get(gap_value)
+    assert equal(
+        distribution.get(threshold + 1), 0
+    ), f"Result {gap_value} should be impossible (0%) as it's the 'gap' after an explosion, but was {actual_gap}."
+
+    for i in range(1, sides - threshold):
+        value = threshold + 1 + i
+        expected_odds = base_odds * base_odds * i
+        actual = distribution.get(value)
+        assert equal(
+            actual, expected_odds
+        ), f"Result {value} odds incorrect: Expected {expected_odds} (base_odds^2 * {i}), but was {actual}."
+
+
+def test_e_lt():
+    # anydice.com can't generate accurate test data for this, thus we do an estimate test to see that the base is correct.
+    sides = 8
+    threshold = 4
+    distribution = parse(f"1d{sides}e<{threshold}")
+
+    base_odds = 1 / sides
+    for i in range(1, threshold - 1):
+        actual = distribution.get(i)
+        assert equal(actual, 0), f"Result {i} should be impossible (0%) because it triggers an explosion, but got {actual}."
+
+    actual_threshold_odds = distribution.get(threshold)
+    assert equal(
+        actual_threshold_odds, base_odds
+    ), f"Result {threshold} (the threshold) should remain at base odds ({base_odds}), but was {actual_threshold_odds}."
+
+    for i in range(threshold + 1, sides):
+        actual = distribution.get(i)
+        assert (
+            actual > base_odds
+        ), f"Result {i} should have boosted odds (> {base_odds}) due to explosion sums, but was {actual}."
 
 
 def test_chain():
