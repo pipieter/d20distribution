@@ -268,8 +268,6 @@ def apply_explode(
     base_odds: float = 1.0,
     base_key: DiscreteKey = (),
 ) -> DiscreteDiceDistributionBuilder:
-    if selector.cat in ("h", "l"):
-        raise InvalidOperationError(f"Invalid explode modifier selector '{selector.cat}'.")
     if explode_value == -1:
         explode_value = selector.num
 
@@ -281,12 +279,7 @@ def apply_explode(
         if new_odds < 1e-6:
             return newdist
 
-        value = sum(new_key)
-        if (
-            (selector.cat == "<" and not (value < explode_value))
-            or (selector.cat == ">" and not (value > explode_value))
-            or (not selector.cat and (value != explode_value))
-        ):
+        if not _should_explode(selector.cat, sum(new_key), explode_value):
             newdist.add(new_key, new_odds)
             continue
 
@@ -296,3 +289,14 @@ def apply_explode(
             newdist.add(key, exploded.get(key))
 
     return newdist
+
+
+def _should_explode(cat: str | None, value: int, target_value: int) -> bool:
+    if cat is None:
+        return value == target_value
+    if cat == ">":
+        return value > target_value
+    if cat == "<":
+        return value < target_value
+
+    raise InvalidOperationError(f"Invalid explode modifier selector '{cat}'.")
