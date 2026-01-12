@@ -264,13 +264,9 @@ def get_reroll_dice_possibilities(dice: DiscreteKey, sides: int, category: str |
 def apply_explode(
     distribution: DiscreteDiceDistributionBuilder,
     selector: d20.ast.SetSelector,
-    explode_value: int = -1,
     base_odds: float = 1.0,
     base_key: DiscreteKey = (),
 ) -> DiscreteDiceDistributionBuilder:
-    if explode_value == -1:
-        explode_value = selector.num
-
     newdist = DiscreteDiceDistributionBuilder()
 
     for key in distribution.keys():
@@ -279,24 +275,23 @@ def apply_explode(
         if new_odds < 1e-6:
             return newdist
 
-        if not _should_explode(selector.cat, sum(new_key), explode_value):
+        if not _should_explode(selector, sum(key)):
             newdist.add(new_key, new_odds)
             continue
 
-        explode_value += new_key[-1]
-        exploded = apply_explode(distribution, selector, explode_value, new_odds, new_key)
+        exploded = apply_explode(distribution, selector, new_odds, new_key)
         for key in exploded.keys():
             newdist.add(key, exploded.get(key))
 
     return newdist
 
 
-def _should_explode(cat: str | None, value: int, target_value: int) -> bool:
-    if cat is None:
-        return value == target_value
-    if cat == ">":
-        return value > target_value
-    if cat == "<":
-        return value < target_value
+def _should_explode(selector: d20.ast.SetSelector, value: int) -> bool:
+    if selector.cat is None:
+        return value == selector.num
+    if selector.cat == ">":
+        return value > selector.num
+    if selector.cat == "<":
+        return value < selector.num
 
-    raise InvalidOperationError(f"Invalid explode modifier selector '{cat}'.")
+    raise InvalidOperationError(f"Invalid explode modifier selector '{selector.cat}'.")
