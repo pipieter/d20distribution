@@ -285,8 +285,10 @@ def apply_explode(
         if (
             (selector.cat == "<" and not (value < explode_value))
             or (selector.cat == ">" and not (value > explode_value))
-            or (value != explode_value)
         ):
+            newdist.add(new_key, new_odds)
+            continue
+        elif value != explode_value:
             newdist.add(new_key, new_odds)
             continue
 
