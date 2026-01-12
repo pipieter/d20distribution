@@ -3,10 +3,8 @@ import math
 from typing import Callable, Iterable
 
 
-def combine(
-    a: dict[int, float], b: dict[int, float], func: Callable[[int, int], int]
-) -> dict[int, float]:
-    result = dict()
+def _combine_dictionaries(a: dict[int, float], b: dict[int, float], func: Callable[[int, int], int]) -> dict[int, float]:
+    result = dict[int, float]()
     for ka, va in a.items():
         for kb, vb in b.items():
             key = func(ka, kb)
@@ -45,7 +43,6 @@ class DiceDistribution(object):
         keys = [k for k in self.keys() if k <= key]
         return sum(self.get(k) for k in keys)
 
-
     def min(self) -> int:
         return min(self.keys())
 
@@ -63,25 +60,25 @@ class DiceDistribution(object):
         return math.sqrt(e_x2 - ex_2)
 
     def __add__(self, other: "DiceDistribution") -> "DiceDistribution":
-        return DiceDistribution(combine(self.dist, other.dist, lambda a, b: a + b))
+        return DiceDistribution(_combine_dictionaries(self.dist, other.dist, lambda a, b: a + b))
 
     def __sub__(self, other: "DiceDistribution") -> "DiceDistribution":
-        return DiceDistribution(combine(self.dist, other.dist, lambda a, b: a - b))
+        return DiceDistribution(_combine_dictionaries(self.dist, other.dist, lambda a, b: a - b))
 
     def __mul__(self, other: "DiceDistribution") -> "DiceDistribution":
-        return DiceDistribution(combine(self.dist, other.dist, lambda a, b: a * b))
+        return DiceDistribution(_combine_dictionaries(self.dist, other.dist, lambda a, b: a * b))
 
     def __floordiv__(self, other: "DiceDistribution") -> "DiceDistribution":
-        return DiceDistribution(combine(self.dist, other.dist, lambda a, b: a // b))
+        return DiceDistribution(_combine_dictionaries(self.dist, other.dist, lambda a, b: a // b))
 
     def __neg__(self) -> "DiceDistribution":
         return DiceDistribution({-v: k for v, k in self.dist.items()})
 
     def advantage(self) -> "DiceDistribution":
-        return DiceDistribution(combine(self.dist, self.dist, lambda a, b: max(a, b)))
+        return DiceDistribution(_combine_dictionaries(self.dist, self.dist, lambda a, b: max(a, b)))
 
     def disadvantage(self) -> "DiceDistribution":
-        return DiceDistribution(combine(self.dist, self.dist, lambda a, b: min(a, b)))
+        return DiceDistribution(_combine_dictionaries(self.dist, self.dist, lambda a, b: min(a, b)))
 
     def __copy__(self) -> "DiceDistribution":
         return DiceDistribution(self.dist)

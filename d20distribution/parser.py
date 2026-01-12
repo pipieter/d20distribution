@@ -1,11 +1,14 @@
-from collections import defaultdict
-from collections.abc import Callable
 import itertools
-import d20
+from collections import defaultdict
+from collections.abc import Callable, Iterable
+
+import d20  # pyright: ignore[reportMissingTypeStubs]
 
 from .distribution import DiceDistribution
 from .errors import DiceParseError, InvalidOperationError
 from .limits import DICE_LIMITS, MODIFIED_DICE_LIMITS
+
+DiscreteKey = tuple[int, ...]
 
 
 def parse(expression: str) -> DiceDistribution:
@@ -25,39 +28,37 @@ def parse(expression: str) -> DiceDistribution:
 
 def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
     if isinstance(ast, d20.ast.Expression):
-        return parse_ast(ast.roll)
+        return parse_ast(ast.roll)  # type: ignore
 
     if isinstance(ast, d20.ast.Literal):
-        return DiceDistribution({ast.value: 1.0})
+        return DiceDistribution({ast.value: 1.0})  # type: ignore
 
     if isinstance(ast, d20.ast.UnOp):
         if ast.op == "-":
-            return -parse_ast(ast.value)
+            return -parse_ast(ast.value)  # type: ignore
         if ast.op == "+":
-            return parse_ast(ast.value)
+            return parse_ast(ast.value)  # type: ignore
         raise DiceParseError(f"Unsupported UnOp operator '{ast.op}'.")
 
     if isinstance(ast, d20.ast.BinOp):
         if ast.op == "+":
-            return parse_ast(ast.left) + parse_ast(ast.right)
+            return parse_ast(ast.left) + parse_ast(ast.right)  # type: ignore
         if ast.op == "-":
-            return parse_ast(ast.left) - parse_ast(ast.right)
+            return parse_ast(ast.left) - parse_ast(ast.right)  # type: ignore
         if ast.op == "*":
-            return parse_ast(ast.left) * parse_ast(ast.right)
+            return parse_ast(ast.left) * parse_ast(ast.right)  # type: ignore
         if ast.op == "/":
-            return parse_ast(ast.left) // parse_ast(ast.right)
+            return parse_ast(ast.left) // parse_ast(ast.right)  # type: ignore
         raise DiceParseError(f"Unsupported BinOp operator '{ast.op}'.")
 
     if isinstance(ast, d20.ast.Dice):
-        return calculate_dice_distribution(ast.num, ast.size, [])
+        return calculate_dice_distribution(ast.num, ast.size, [])  # type: ignore
 
     if isinstance(ast, d20.ast.OperatedDice):
-        return calculate_dice_distribution(
-            ast.value.num, ast.value.size, ast.operations
-        )
+        return calculate_dice_distribution(ast.value.num, ast.value.size, ast.operations)  # type: ignore
 
     if isinstance(ast, d20.ast.Parenthetical):
-        return parse_ast(ast.value)
+        return parse_ast(ast.value)  # type: ignore
 
     raise DiceParseError(f"Unsupported node type '{type(ast)}'.")
 
@@ -80,33 +81,33 @@ def calculate_dice_distribution(
 
 
 class DiscreteDiceDistributionBuilder(object):
-    dist: defaultdict[tuple, float]
+    dist: defaultdict[DiscreteKey, float]
 
     def __init__(self):
         self.dist = defaultdict(float)
 
-    def add(self, key: tuple, value: float) -> None:
+    def add(self, key: DiscreteKey, value: float) -> None:
         key = tuple(sorted(key))
         self.dist[key] += value
 
-    def get(self, key: tuple) -> float:
+    def get(self, key: DiscreteKey) -> float:
         key = tuple(sorted(key))
         return self.dist[key]
 
-    def keys(self) -> list[tuple]:
+    def keys(self) -> Iterable[DiscreteKey]:
         return self.dist.keys()
 
-    def values(self) -> float:
+    def values(self) -> Iterable[float]:
         return self.dist.values()
 
     def build(self) -> "DiceDistribution":
-        distribution = defaultdict(float)
+        distribution = defaultdict[int, float](float)
         for key, value in self.dist.items():
             distribution[sum(key)] += value
         return DiceDistribution(dict(distribution))
 
-    def transform_keys(self, transform: Callable[[tuple], tuple]) -> None:
-        distribution = defaultdict(float)
+    def transform_keys(self, transform: Callable[[DiscreteKey], DiscreteKey]) -> None:
+        distribution = defaultdict[DiscreteKey, float](float)
         for key, value in self.dist.items():
             new_key = transform(key)
             distribution[new_key] += value
@@ -130,24 +131,24 @@ def calculate_dice_distribution_directly(
 
     for op in operations:
         if op.op == "k":
-            distribution.transform_keys(lambda k: apply_keep_to_key(k, op.sels[0]))
+            distribution.transform_keys(lambda k: apply_keep_to_key(k, op.sels[0])) # type: ignore
         elif op.op == "p":
-            distribution.transform_keys(lambda k: apply_drop_to_key(k, op.sels[0]))
+            distribution.transform_keys(lambda k: apply_drop_to_key(k, op.sels[0])) # type: ignore
         elif op.op == "mi":
-            distribution.transform_keys(lambda k: apply_min_to_key(k, op.sels[0].num))
+            distribution.transform_keys(lambda k: apply_min_to_key(k, op.sels[0].num)) # type: ignore
         elif op.op == "ma":
-            distribution.transform_keys(lambda k: apply_max_to_key(k, op.sels[0].num))
+            distribution.transform_keys(lambda k: apply_max_to_key(k, op.sels[0].num)) # type: ignore
         elif op.op == "ro":
-            distribution = apply_ro(distribution, sides, op.sels[0])
+            distribution = apply_ro(distribution, sides, op.sels[0]) # type: ignore
         elif op.op == "e":
-            distribution = apply_explode(distribution, op.sels[0].num)
+            distribution = apply_explode(distribution, op.sels[0].num) # type: ignore
         else:
             raise InvalidOperationError(f"Unsupported dice modifier '{op.op}'.")
 
     return distribution.build()
 
 
-def apply_keep_to_key(key: tuple, selector: d20.ast.SetSelector) -> tuple:
+def apply_keep_to_key(key: DiscreteKey, selector: d20.ast.SetSelector) -> DiscreteKey:
     if selector.cat is None:
         # Keep all values matching exactly selector.num
         return tuple([p for p in key if p == selector.num])
@@ -162,20 +163,20 @@ def apply_keep_to_key(key: tuple, selector: d20.ast.SetSelector) -> tuple:
 
     if selector.cat == "l":
         # Keep lowest selector.num values
-        key = list(sorted(list(key), reverse=False))
+        key = tuple(sorted(list(key), reverse=False))
         key = key[: selector.num]
-        return tuple(key)
+        return key
 
     if selector.cat == "h":
         # Keep highest selector.num values
-        key = list(sorted(list(key), reverse=True))
+        key = tuple(sorted(list(key), reverse=True))
         key = key[: selector.num]
-        return tuple(key)
+        return key
 
     raise InvalidOperationError(f"Invalid keep modifier selector '{selector.cat}'.")
 
 
-def apply_drop_to_key(key: tuple, selector: d20.ast.SetSelector) -> tuple:
+def apply_drop_to_key(key: DiscreteKey, selector: d20.ast.SetSelector) -> DiscreteKey:
     if selector.cat is None:
         # Drop all values matching exactly selector.num
         return tuple([p for p in key if p != selector.num])
@@ -190,24 +191,24 @@ def apply_drop_to_key(key: tuple, selector: d20.ast.SetSelector) -> tuple:
 
     if selector.cat == "l":
         # Drop lowest selector.num values
-        key = list(sorted(list(key), reverse=False))
+        key = tuple(sorted(list(key), reverse=False))
         key = key[selector.num :]
-        return tuple(key)
+        return key
 
     if selector.cat == "h":
         # Drop highest selector.num values
-        key = list(sorted(list(key), reverse=True))
+        key = tuple(sorted(list(key), reverse=True))
         key = key[selector.num :]
-        return tuple(key)
+        return key
 
     raise InvalidOperationError(f"Invalid drop modifier selector '{selector.cat}'.")
 
 
-def apply_min_to_key(key: tuple, min_value: int) -> tuple:
+def apply_min_to_key(key: DiscreteKey, min_value: int) -> DiscreteKey:
     return tuple([value if value >= min_value else min_value for value in key])
 
 
-def apply_max_to_key(key: tuple, max_value: int) -> tuple:
+def apply_max_to_key(key: DiscreteKey, max_value: int) -> DiscreteKey:
     return tuple([value if value <= max_value else max_value for value in key])
 
 
@@ -228,9 +229,10 @@ def apply_ro(
 
     return newdist
 
+
 def get_reroll_dice_possibilities(
-    dice: tuple, sides: int, category: str | None, num: int
-) -> list[tuple]:
+    dice: DiscreteKey, sides: int, category: str | None, num: int
+) -> list[DiscreteKey]:
     if len(dice) == 0:
         return [()]
 
@@ -248,7 +250,7 @@ def get_reroll_dice_possibilities(
         combinations = get_reroll_dice_possibilities(
             tuple(rest), sides, category, num - 1
         )
-        outcomes: list[tuple] = []
+        outcomes: list[DiscreteKey] = []
 
         for combination in combinations:
             for roll in range(1, sides + 1):
@@ -274,11 +276,12 @@ def get_reroll_dice_possibilities(
 
     return outcomes
 
+
 def apply_explode(
     distribution: DiscreteDiceDistributionBuilder,
     explode_value: int,
     base_odds: float = 1.0,
-    base_key: tuple = ()
+    base_key: DiscreteKey = (),
 ) -> DiscreteDiceDistributionBuilder:
     newdist = DiscreteDiceDistributionBuilder()
 

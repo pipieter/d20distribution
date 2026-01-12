@@ -1,9 +1,10 @@
 import pytest
+
 from d20distribution import parse
 from d20distribution.errors import InvalidOperationError
 
 
-def equal(a: float, b: float, epsilon=1e-6) -> bool:
+def equal(a: float, b: float, epsilon: float = 1e-6) -> bool:
     return abs(a - b) <= epsilon
 
 
