@@ -283,20 +283,18 @@ def apply_explode(
     newdist = DiscreteDiceDistributionBuilder()
 
     for key in distribution.keys():
-        odds = distribution.get(key)
-
         new_key = base_key + key
-        new_odds = base_odds * odds
-
+        new_odds = base_odds * distribution.get(key)
         if new_odds < 1e-6:
             return newdist
 
-        if sum(new_key) == explode_value:
-            explode_value += new_key[-1]
-            exploded = apply_explode(distribution, explode_value, new_odds, new_key)
-            for key in exploded.keys():
-                newdist.add(key, exploded.get(key))
-        else:
+        if sum(new_key) != explode_value:
             newdist.add(new_key, new_odds)
+            continue
+
+        explode_value += new_key[-1]
+        exploded = apply_explode(distribution, explode_value, new_odds, new_key)
+        for key in exploded.keys():
+            newdist.add(key, exploded.get(key))
 
     return newdist
