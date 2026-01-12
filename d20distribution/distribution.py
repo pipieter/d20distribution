@@ -35,6 +35,17 @@ class DiceDistribution(object):
     def get(self, key: int) -> float:
         return self.dist.get(key, 0)
 
+    def get_at_least(self, key: int) -> float:
+        """Get the odds that a value has a minium value of key."""
+        keys = [k for k in self.keys() if k >= key]
+        return sum(self.get(k) for k in keys)
+
+    def get_at_most(self, key: int) -> float:
+        """Get the odds that a value has a maximum value of key."""
+        keys = [k for k in self.keys() if k <= key]
+        return sum(self.get(k) for k in keys)
+
+
     def min(self) -> int:
         return min(self.keys())
 
@@ -64,7 +75,7 @@ class DiceDistribution(object):
         return DiceDistribution(combine(self.dist, other.dist, lambda a, b: a // b))
 
     def __neg__(self) -> "DiceDistribution":
-        return DiceDistribution({-v: k for v, k in self.dist.items})
+        return DiceDistribution({-v: k for v, k in self.dist.items()})
 
     def advantage(self) -> "DiceDistribution":
         return DiceDistribution(combine(self.dist, self.dist, lambda a, b: max(a, b)))
