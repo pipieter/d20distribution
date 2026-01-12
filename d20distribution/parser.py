@@ -16,9 +16,7 @@ def parse(expression: str) -> DiceDistribution:
     try:
         d20.roll(expression)
     except d20.errors.RollSyntaxError:
-        raise DiceParseError(
-            "There was a syntax error found while parsing the expression."
-        )
+        raise DiceParseError("There was a syntax error found while parsing the expression.")
     except Exception:
         raise DiceParseError("There was an error found while parsing the expression.")
 
@@ -63,9 +61,7 @@ def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
     raise DiceParseError(f"Unsupported node type '{type(ast)}'.")
 
 
-def calculate_dice_distribution(
-    num: int, sides: int, operations: list[d20.ast.SetOperator]
-) -> DiceDistribution:
+def calculate_dice_distribution(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
     if len(operations) > 0:
         return calculate_dice_distribution_directly(num, sides, operations)
 
@@ -74,9 +70,7 @@ def calculate_dice_distribution(
 
     distribution = DiceDistribution({})
     for _ in range(num):
-        distribution = distribution + DiceDistribution(
-            {k: 1 / sides for k in range(1, sides + 1)}
-        )
+        distribution = distribution + DiceDistribution({k: 1 / sides for k in range(1, sides + 1)})
     return distribution
 
 
@@ -114,9 +108,7 @@ class DiscreteDiceDistributionBuilder(object):
         self.dist = distribution
 
 
-def calculate_dice_distribution_directly(
-    num: int, sides: int, operations: list[d20.ast.SetOperator]
-) -> DiceDistribution:
+def calculate_dice_distribution_directly(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
     # A limit is set to avoid extensive calculations. This function calculates the
     # odds of each possibility individually, which can grow exponentially for
     # a large number of dice.
@@ -131,17 +123,17 @@ def calculate_dice_distribution_directly(
 
     for op in operations:
         if op.op == "k":
-            distribution.transform_keys(lambda k: apply_keep_to_key(k, op.sels[0])) # type: ignore
+            distribution.transform_keys(lambda k: apply_keep_to_key(k, op.sels[0]))  # type: ignore
         elif op.op == "p":
-            distribution.transform_keys(lambda k: apply_drop_to_key(k, op.sels[0])) # type: ignore
+            distribution.transform_keys(lambda k: apply_drop_to_key(k, op.sels[0]))  # type: ignore
         elif op.op == "mi":
-            distribution.transform_keys(lambda k: apply_min_to_key(k, op.sels[0].num)) # type: ignore
+            distribution.transform_keys(lambda k: apply_min_to_key(k, op.sels[0].num))  # type: ignore
         elif op.op == "ma":
-            distribution.transform_keys(lambda k: apply_max_to_key(k, op.sels[0].num)) # type: ignore
+            distribution.transform_keys(lambda k: apply_max_to_key(k, op.sels[0].num))  # type: ignore
         elif op.op == "ro":
-            distribution = apply_ro(distribution, sides, op.sels[0]) # type: ignore
+            distribution = apply_ro(distribution, sides, op.sels[0])  # type: ignore
         elif op.op == "e":
-            distribution = apply_explode(distribution, op.sels[0].num) # type: ignore
+            distribution = apply_explode(distribution, op.sels[0])  # type: ignore
         else:
             raise InvalidOperationError(f"Unsupported dice modifier '{op.op}'.")
 
@@ -230,9 +222,7 @@ def apply_ro(
     return newdist
 
 
-def get_reroll_dice_possibilities(
-    dice: DiscreteKey, sides: int, category: str | None, num: int
-) -> list[DiscreteKey]:
+def get_reroll_dice_possibilities(dice: DiscreteKey, sides: int, category: str | None, num: int) -> list[DiscreteKey]:
     if len(dice) == 0:
         return [()]
 
@@ -247,9 +237,7 @@ def get_reroll_dice_possibilities(
             dice = tuple(sorted(dice, reverse=False))
 
         _, *rest = dice
-        combinations = get_reroll_dice_possibilities(
-            tuple(rest), sides, category, num - 1
-        )
+        combinations = get_reroll_dice_possibilities(tuple(rest), sides, category, num - 1)
         outcomes: list[DiscreteKey] = []
 
         for combination in combinations:
@@ -262,11 +250,7 @@ def get_reroll_dice_possibilities(
     combinations = get_reroll_dice_possibilities(tuple(rest), sides, category, num)
     outcomes = []
 
-    if (
-        (category is None and first == num)
-        or (category == ">" and first > num)
-        or (category == "<" and first < num)
-    ):
+    if (category is None and first == num) or (category == ">" and first > num) or (category == "<" and first < num):
         for combination in combinations:
             for roll in range(1, sides + 1):
                 outcomes.append((roll,) + combination)
@@ -279,10 +263,16 @@ def get_reroll_dice_possibilities(
 
 def apply_explode(
     distribution: DiscreteDiceDistributionBuilder,
-    explode_value: int,
+    selector: d20.ast.SetSelector,
+    explode_value: int = -1,
     base_odds: float = 1.0,
     base_key: DiscreteKey = (),
 ) -> DiscreteDiceDistributionBuilder:
+    if selector.cat in ("h", "l"):
+        raise InvalidOperationError(f"Invalid explode modifier selector '{selector.cat}'.")
+    if explode_value == -1:
+        explode_value = selector.num
+
     newdist = DiscreteDiceDistributionBuilder()
 
     for key in distribution.keys():
@@ -291,12 +281,17 @@ def apply_explode(
         if new_odds < 1e-6:
             return newdist
 
-        if sum(new_key) != explode_value:
+        value = sum(new_key)
+        if (
+            (selector.cat == "<" and not (value < explode_value))
+            or (selector.cat == ">" and not (value > explode_value))
+            or (value != explode_value)
+        ):
             newdist.add(new_key, new_odds)
             continue
 
         explode_value += new_key[-1]
-        exploded = apply_explode(distribution, explode_value, new_odds, new_key)
+        exploded = apply_explode(distribution, selector, explode_value, new_odds, new_key)
         for key in exploded.keys():
             newdist.add(key, exploded.get(key))
 
