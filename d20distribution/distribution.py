@@ -4,7 +4,7 @@ from typing import Callable, Iterable
 
 
 def _combine_dictionaries(a: dict[int, float], b: dict[int, float], func: Callable[[int, int], int]) -> dict[int, float]:
-    result = dict()
+    result = dict[int, float]()
     for ka, va in a.items():
         for kb, vb in b.items():
             key = func(ka, kb)
