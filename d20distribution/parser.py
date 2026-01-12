@@ -277,7 +277,7 @@ def get_reroll_dice_possibilities(
 def apply_explode(
     distribution: DiscreteDiceDistributionBuilder,
     explode_value: int,
-    base_odds: float | None = 1.0,
+    base_odds: float = 1.0,
     base_key: tuple = ()
 ) -> DiscreteDiceDistributionBuilder:
     newdist = DiscreteDiceDistributionBuilder()
