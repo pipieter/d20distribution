@@ -19,5 +19,25 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      - name: Run pytest on bot_test.py
+      - name: Run pytest
         run: python -m pytest
+
+  requirements:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: ./.github/actions/setup
+
+      - name: Install pip-check-reqs
+        run: |
+          pip install pip-check-reqs
+
+      - name: Check for imports missing from requirements.txt
+        run: pip-missing-reqs d20distribution test --ignore-file=requirements.txt
+
+      - name: Check for unused packages in requirements.txt
+        run: pip-extra-reqs d20distribution test --ignore-file=requirements.txt
