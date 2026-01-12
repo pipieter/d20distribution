@@ -9,20 +9,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  flake8-lint:
-    runs-on: ubuntu-latest
-    name: flake8
-    steps:
-      - name: Check out source repository
-        uses: actions/checkout@v4
-
-      - name: flake8 Lint
-        uses: py-actions/flake8@v2
-        with:
-          ignore: "W503"
-          max-line-length: 999
-          path: d20distribution test
-
   black-lint:
     runs-on: ubuntu-latest
     name: black
