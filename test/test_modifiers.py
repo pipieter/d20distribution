@@ -154,15 +154,85 @@ def test_ro_2():
     for value, chance in odds:
         assert equal(chance, 100 * distribution.get(value), 0.01)
 
+
 def test_e():
     sides = 8
     distribution = parse(f"1d{sides}e8")
     base_chance = 1 / sides
     for value in distribution.keys():
         depth = (value - 1) // sides + 1
-        chance = base_chance ** depth
+        chance = base_chance**depth
 
         assert abs(chance - distribution.get(value)) < 1e-7
+
+
+def test_e_2():
+    distribution = parse("1d8e8")
+
+    # Odds based on anydice.com
+    # output [explode 1d8]
+    odds = [
+        (1, 12.5),
+        (2, 12.5),
+        (3, 12.5),
+        (4, 12.5),
+        (5, 12.5),
+        (6, 12.5),
+        (7, 12.5),
+        (9, 1.5625),
+        (10, 1.5625),
+        (11, 1.5625),
+        (12, 1.5625),
+        (13, 1.5625),
+        (14, 1.5625),
+        (15, 1.5625),
+        (17, 0.1953125),
+        (18, 0.1953125),
+        (19, 0.1953125),
+        (20, 0.1953125),
+        (21, 0.1953125),
+        (22, 0.1953125),
+        (23, 0.1953125),
+        # On anydice, 24 is the summation of all values of 24 and beyond,
+        # as they have a limit on rounding
+        (24, 0.1953125),
+    ]
+
+    for value, chance in odds[:-1]:
+        assert equal(chance, 100 * distribution.get(value), 0.001)
+
+    assert equal(odds[-1][1], 100 * distribution.get_at_least(odds[-1][0]), 0.001)
+
+
+def test_e_3():
+    distribution = parse("1d10mi5e10")
+
+    # Odds based on anydice.com
+    # output [explode [highest of 1d10 and 5]]
+    odds = [
+        (5, 50),
+        (6, 10),
+        (7, 10),
+        (8, 10),
+        (9, 10),
+        (15, 5),
+        (16, 1),
+        (17, 1),
+        (18, 1),
+        (19, 1),
+        (25, 0.5),
+        (26, 0.1),
+        (27, 0.1),
+        (28, 0.1),
+        (29, 0.1),
+        (30, 0.1),
+    ]
+
+    for value, chance in odds[:-1]:
+        assert equal(chance, 100 * distribution.get(value), 0.001)
+
+    assert equal(odds[-1][1], 100 * distribution.get_at_least(odds[-1][0]), 0.001)
+
 
 def test_chain():
     distribution = parse("2d12rol1mi3")
