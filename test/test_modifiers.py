@@ -154,6 +154,15 @@ def test_ro_2():
     for value, chance in odds:
         assert equal(chance, 100 * distribution.get(value), 0.01)
 
+def test_e():
+    sides = 8
+    distribution = parse(f"1d{sides}e8")
+    base_chance = 1 / sides
+    for value in distribution.keys():
+        depth = (value - 1) // sides + 1
+        chance = base_chance ** depth
+
+        assert abs(chance - distribution.get(value)) < 1e-7
 
 def test_chain():
     distribution = parse("2d12rol1mi3")
