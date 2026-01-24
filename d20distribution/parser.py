@@ -3,6 +3,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable
 
 import d20  # pyright: ignore[reportMissingTypeStubs]
+import numpy as np
 
 from .distribution import DiceDistribution
 from .errors import DiceParseError, InvalidOperationError
@@ -68,10 +69,22 @@ def calculate_dice_distribution(num: int, sides: int, operations: list[d20.ast.S
     if sides * num > DICE_LIMITS:
         raise InvalidOperationError(f"Dice are too large to calculate.")
 
-    distribution = DiceDistribution({})
-    for _ in range(num):
-        distribution = distribution + DiceDistribution({k: 1 / sides for k in range(1, sides + 1)})
-    return distribution
+    # The uniform dice distributions will be calculated using polynomial convolutions
+    # For more information, see this blog post:
+    # https://blog.demofox.org/2025/01/05/dice-deconvolution-and-generating-functions/
+
+    min_value = num
+    max_value = num * sides
+
+    single_conv = np.array([1 / sides for _ in range(sides)])
+    combined_conv = single_conv
+
+    for _ in range(num - 1):
+        combined_conv = np.convolve(combined_conv, single_conv)
+
+    # Remember to shift the values by min_value
+    distribution = {i: float(combined_conv[i - min_value]) for i in range(min_value, max_value + 1)}
+    return DiceDistribution(distribution)
 
 
 class DiscreteDiceDistributionBuilder(object):
