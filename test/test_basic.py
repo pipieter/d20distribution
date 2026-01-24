@@ -1,8 +1,9 @@
+from test import equal
+
 import pytest
 
 from d20distribution import parse
 from d20distribution.errors import DiceParseError
-from test import equal
 
 
 def test_d20():

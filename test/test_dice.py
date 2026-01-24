@@ -1,5 +1,6 @@
-from d20distribution import parse
 from test import assert_anydice, equal
+
+from d20distribution import parse
 
 
 def test_d6():
