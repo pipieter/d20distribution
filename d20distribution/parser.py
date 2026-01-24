@@ -69,6 +69,9 @@ def calculate_dice_distribution(num: int, sides: int, operations: list[d20.ast.S
     if sides * num > DICE_LIMITS:
         raise InvalidOperationError(f"Dice are too large to calculate.")
 
+    if num == 0 or sides == 0:
+        return DiceDistribution({0: 1})
+
     # The uniform dice distributions will be calculated using polynomial convolutions
     # For more information, see this blog post:
     # https://blog.demofox.org/2025/01/05/dice-deconvolution-and-generating-functions/

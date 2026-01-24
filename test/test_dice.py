@@ -3,6 +3,18 @@ from test import assert_anydice, equal
 from d20distribution import parse
 
 
+def test_0d6():
+    distribution = parse("0d6")
+
+    assert equal(distribution.get(0), 1.0)
+    assert equal(distribution.get(1), 0.0)
+    assert equal(distribution.get(2), 0.0)
+    assert equal(distribution.get(3), 0.0)
+    assert equal(distribution.get(4), 0.0)
+    assert equal(distribution.get(5), 0.0)
+    assert equal(distribution.get(6), 0.0)
+
+
 def test_d6():
     distribution = parse("1d6")
 
