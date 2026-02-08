@@ -311,3 +311,11 @@ def test_chain():
 
     for value, chance in odds:
         assert equal(chance, 100 * distribution.get(value), 0.01)
+
+
+def test_mi_out_of_bounds():
+    distribution = parse("1d20mi21")
+
+    assert equal(distribution.get(21), 1.0)
+    assert equal(distribution.mean(), 21.0)
+    assert equal(distribution.stdev(), 0.0)
