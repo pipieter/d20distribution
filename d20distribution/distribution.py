@@ -57,7 +57,7 @@ class DiceDistribution(object):
         # stdev = sqrt(variance)
         e_x2 = self.mean(mapping=lambda x: x**2)
         ex_2 = self.mean() ** 2
-        return math.sqrt(e_x2 - ex_2)
+        return math.sqrt(abs(e_x2 - ex_2))
 
     def __add__(self, other: "DiceDistribution") -> "DiceDistribution":
         return DiceDistribution(_combine_dictionaries(self.dist, other.dist, lambda a, b: a + b))
