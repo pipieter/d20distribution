@@ -127,9 +127,11 @@ class DiscreteDiceDistributionBuilder(object):
 def calculate_dice_distribution_directly(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
     expression_manipulates_dice_count = any(op.op in ["k", "p"] for op in operations)
     if not expression_manipulates_dice_count and num > 1:
-        if sides > 20 or num > 20:
+        if sides * num > DICE_LIMITS:
             raise InvalidOperationError("Modified dice are too large to calculate.")
 
+        # If dice count isn't modified, treat NdX as the sum of N independent 1dX.
+        # This lets us convolve single-die distributions instead of iterating over all sides^num outcome combinations.
         dist = calculate_dice_distribution_directly(1, sides, operations)
         for _ in range(num - 1):
             dist += calculate_dice_distribution_directly(1, sides, operations)
