@@ -129,7 +129,17 @@ def calculate_dice_distribution_directly(num: int, sides: int, operations: list[
     # odds of each possibility individually, which can grow exponentially for
     # a large number of dice.
     if sides**num > MODIFIED_DICE_LIMITS:
-        raise InvalidOperationError(f"Modified dice are too large to calculate.")
+        if sides > 20 or num > 20:
+            raise InvalidOperationError("Modified dice are too large to calculate.")
+
+        if "k" in [op.op for op in operations] or "p" in [op.op for op in operations]:
+            # K & P would not have the same mathematical results if handled in this way.
+            raise InvalidOperationError("Modified dice are too large to calculate.")
+
+        dist = calculate_dice_distribution_directly(1, sides, operations)
+        for _ in range(num - 1):
+            dist += calculate_dice_distribution_directly(1, sides, operations)
+        return dist
 
     possibilities = sides**num
     products = itertools.product(range(1, sides + 1), repeat=num)
