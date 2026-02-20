@@ -13,7 +13,7 @@ from d20distribution import parse
         ("1d8"),
         ("1d6"),
         ("1d4"),
-    ]
+    ],
 )
 def test_basic(benchmark: BenchmarkFixture, expression: str):
     benchmark(parse, expression)

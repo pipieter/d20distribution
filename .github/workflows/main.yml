@@ -37,7 +37,7 @@ jobs:
           pip install pip-check-reqs
 
       - name: Check for imports missing from requirements.txt
-        run: pip-missing-reqs d20distribution test --ignore-file=requirements.txt
+        run: pip-missing-reqs d20distribution test benchmarks --ignore-file=requirements.txt
 
       - name: Check for unused packages in requirements.txt
-        run: pip-extra-reqs d20distribution test --ignore-file=requirements.txt
+        run: pip-extra-reqs d20distribution test benchmarks --ignore-file=requirements.txt
