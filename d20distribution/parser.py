@@ -129,7 +129,7 @@ def calculate_dice_distribution_directly(num: int, sides: int, operations: list[
     # we can compute XdY as X separate 1dY rolls added together (e.g. 2d8 === 1d8 + 1d8).
     # Instead of generating every possible combination of rolls, we can reuse the single-die distribution and combine it repeatedly.
     # This produces the same result but computes much faster. (O(X*Y) instead of O(Y^X))
-    expression_manipulates_dice_count = any(op.op in ["k", "p"] for op in operations)
+    expression_manipulates_dice_count = any(op.op in ["k", "p", "ro"] for op in operations)
     expression_has_set_selector = any(op.sels[0] in ["h", "l"] for op in operations)
 
     if not expression_manipulates_dice_count and not expression_has_set_selector and num > 1:
