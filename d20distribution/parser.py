@@ -125,8 +125,10 @@ class DiscreteDiceDistributionBuilder(object):
 
 
 def calculate_dice_distribution_directly(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
-    expression_manipulates_dice_count = any(op.op in ["k", "p"] for op in operations)
-    if not expression_manipulates_dice_count and num > 1:
+    expression_manipulates_dice_count = any(op.op in ["k", "p", "ro"] for op in operations)
+    expression_has_set_selector = any(op.sels[0] in ["h", "l"] for op in operations)
+
+    if not expression_manipulates_dice_count and not expression_has_set_selector and num > 1:
         if sides * num > DICE_LIMITS:
             raise InvalidOperationError("Modified dice are too large to calculate.")
 
