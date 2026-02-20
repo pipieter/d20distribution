@@ -125,21 +125,21 @@ class DiscreteDiceDistributionBuilder(object):
 
 
 def calculate_dice_distribution_directly(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
-    # A limit is set to avoid extensive calculations. This function calculates the
-    # odds of each possibility individually, which can grow exponentially for
-    # a large number of dice.
-    if sides**num > MODIFIED_DICE_LIMITS:
+    expression_manipulates_dice_count = any(op.op in ["k", "p"] for op in operations)
+    if not expression_manipulates_dice_count and num > 1:
         if sides > 20 or num > 20:
-            raise InvalidOperationError("Modified dice are too large to calculate.")
-
-        if "k" in [op.op for op in operations] or "p" in [op.op for op in operations]:
-            # K & P would not have the same mathematical results if handled in this way.
             raise InvalidOperationError("Modified dice are too large to calculate.")
 
         dist = calculate_dice_distribution_directly(1, sides, operations)
         for _ in range(num - 1):
             dist += calculate_dice_distribution_directly(1, sides, operations)
         return dist
+
+    # A limit is set to avoid extensive calculations. This function calculates the
+    # odds of each possibility individually, which can grow exponentially for
+    # a large number of dice.
+    if sides**num > MODIFIED_DICE_LIMITS:
+        raise InvalidOperationError("Modified dice are too large to calculate.")
 
     possibilities = sides**num
     products = itertools.product(range(1, sides + 1), repeat=num)
