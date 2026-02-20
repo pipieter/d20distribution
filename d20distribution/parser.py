@@ -125,6 +125,7 @@ class DiscreteDiceDistributionBuilder(object):
 
 
 def calculate_dice_distribution_directly(num: int, sides: int, operations: list[d20.ast.SetOperator]) -> DiceDistribution:
+    # If there is no operator that modifies the dice-count (num), we can calculate more efficiently.
     expression_manipulates_dice_count = any(op.op in ["k", "p", "ro"] for op in operations)
     expression_has_set_selector = any(op.sels[0] in ["h", "l"] for op in operations)
 
