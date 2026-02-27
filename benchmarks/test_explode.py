@@ -5,8 +5,9 @@ from d20distribution import parse
 
 
 @pytest.mark.parametrize(
-    "dice",
+    "sides",
     [
+        ("20"),
         ("12"),
         ("10"),
         ("8"),
@@ -15,7 +16,7 @@ from d20distribution import parse
     ],
 )
 @pytest.mark.parametrize(
-    "count",
+    "num",
     [
         ("100"),
         ("20"),
@@ -26,6 +27,6 @@ from d20distribution import parse
         ("4"),
     ],
 )
-def test_explode(benchmark: BenchmarkFixture, dice: str, count: str):
-    expression = f"{count}d{dice}e{dice}"
+def test_explode(benchmark: BenchmarkFixture, sides: str, num: str):
+    expression = f"{num}d{sides}e{sides}"
     benchmark(parse, expression)
