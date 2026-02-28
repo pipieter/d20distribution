@@ -317,3 +317,13 @@ def test_mi_out_of_bounds():
     assert equal(distribution.get(21), 1.0)
     assert equal(distribution.mean(), 21.0)
     assert equal(distribution.stdev(), 0.0)
+
+
+def test_valid_operations():
+    """
+    This test is meant to be used to ensure that specific scenarios are running
+    correctly, i.e. they do not throw any errors during the calculations. They
+    are mainly used to test combining modifiers
+    """
+
+    parse("4d6kh3rol2")
