@@ -2,7 +2,7 @@ import copy
 import math
 from typing import Callable, Iterable
 
-from errors import InvalidOperationError
+from .errors import InvalidOperationError
 
 
 def _combine_dictionaries(a: dict[int, float], b: dict[int, float], func: Callable[[int, int], int]) -> dict[int, float]:
