@@ -120,6 +120,7 @@ class DiscreteDiceDistributionBuilder(object):
         distribution = defaultdict[DiscreteKey, float](float)
         for key, value in self.dist.items():
             new_key = transform(key)
+            new_key = tuple(sorted(new_key))
             distribution[new_key] += value
         self.dist = distribution
 
