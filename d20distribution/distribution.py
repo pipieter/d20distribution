@@ -2,6 +2,8 @@ import copy
 import math
 from typing import Callable, Iterable
 
+from errors import InvalidOperationError
+
 
 def _combine_dictionaries(a: dict[int, float], b: dict[int, float], func: Callable[[int, int], int]) -> dict[int, float]:
     result = dict[int, float]()
@@ -74,11 +76,23 @@ class DiceDistribution(object):
     def __neg__(self) -> "DiceDistribution":
         return DiceDistribution({-v: k for v, k in self.dist.items()})
 
-    def advantage(self) -> "DiceDistribution":
-        return DiceDistribution(_combine_dictionaries(self.dist, self.dist, lambda a, b: max(a, b)))
+    def advantage(self, count: int = 2) -> "DiceDistribution":
+        if count < 1:
+            raise InvalidOperationError(f"Rolling with advantage requires at least one roll, instead received {count}.")
 
-    def disadvantage(self) -> "DiceDistribution":
-        return DiceDistribution(_combine_dictionaries(self.dist, self.dist, lambda a, b: min(a, b)))
+        result = copy.copy(self.dist)
+        for _ in range(1, count):
+            result = _combine_dictionaries(result, self.dist, lambda a, b: max(a, b))
+        return DiceDistribution(result)
+
+    def disadvantage(self, count: int = 2) -> "DiceDistribution":
+        if count < 1:
+            raise InvalidOperationError(f"Rolling with disadvantage requires at least one roll, instead received {count}.")
+
+        result = copy.copy(self.dist)
+        for _ in range(1, count):
+            result = _combine_dictionaries(result, self.dist, lambda a, b: min(a, b))
+        return DiceDistribution(result)
 
     def __copy__(self) -> "DiceDistribution":
         return DiceDistribution(self.dist)
