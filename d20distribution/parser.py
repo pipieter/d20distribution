@@ -8,6 +8,7 @@ import numpy as np
 from .distribution import DiceDistribution
 from .errors import DiceParseError, InvalidOperationError
 from .limits import DICE_LIMITS, MODIFIED_DICE_LIMITS
+from .calculate import ConvolutionDistributionBuilder
 
 DiscreteKey = tuple[int, ...]
 
@@ -23,6 +24,14 @@ def parse(expression: str) -> DiceDistribution:
 
     ast = d20.parse(expression, allow_comments=False)
     return parse_ast(ast)
+
+
+def parse_dimensions(count: int, sides: str | int) -> tuple[int, int]:
+    if sides == "%":
+        sides = 100
+    else:
+        sides = int(sides)
+    return count, sides
 
 
 def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
@@ -51,10 +60,21 @@ def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
         raise DiceParseError(f"Unsupported BinOp operator '{ast.op}'.")
 
     if isinstance(ast, d20.ast.Dice):
-        return calculate_dice_distribution(ast.num, ast.size, [])  # type: ignore
+        count, sides = parse_dimensions(ast.num, ast.size)
+        builder = ConvolutionDistributionBuilder(count, sides, [])
+        return builder.distribution()
 
     if isinstance(ast, d20.ast.OperatedDice):
-        return calculate_dice_distribution(ast.value.num, ast.value.size, ast.operations)  # type: ignore
+        count, sides = parse_dimensions(ast.value.num, ast.value.size)  # type: ignore
+        operations: list[d20.SetOperator] = ast.operations  # type: ignore
+
+        contains_non_convolution_operation = any(not ConvolutionDistributionBuilder.supports_operation(op) for op in operations)
+
+        if contains_non_convolution_operation:
+            return calculate_dice_distribution(ast.value.num, ast.value.size, ast.operations)  # type: ignore
+        else:
+            builder = ConvolutionDistributionBuilder(count, sides, operations)
+            return builder.distribution()
 
     if isinstance(ast, d20.ast.Parenthetical):
         return parse_ast(ast.value)  # type: ignore
