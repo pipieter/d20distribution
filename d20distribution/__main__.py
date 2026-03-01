@@ -6,8 +6,8 @@ try:
 except:
     ...
 
-from .parser import parse
 from .distribution import DiceDistribution
+from .parser import parse
 
 
 def print_distribution(dist: DiceDistribution, line_width: int) -> None:
