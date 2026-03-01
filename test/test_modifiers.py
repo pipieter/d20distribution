@@ -37,6 +37,8 @@ def test_modifiers_kh():
         (11, 18.83),
         (12, 13.19),
     ]
+
+    print(distribution.dist)
     for value, chance in odds:
         assert equal(chance, 100 * distribution.get(value), 0.01)
 

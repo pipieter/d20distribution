@@ -5,10 +5,10 @@ from collections.abc import Callable, Iterable
 import d20  # pyright: ignore[reportMissingTypeStubs]
 import numpy as np
 
+from .calculate import ConvolutionDistributionBuilder, DiscreteDistributionBuilder
 from .distribution import DiceDistribution
 from .errors import DiceParseError, InvalidOperationError
 from .limits import DICE_LIMITS, MODIFIED_DICE_LIMITS
-from .calculate import ConvolutionDistributionBuilder
 
 DiscreteKey = tuple[int, ...]
 
@@ -59,6 +59,9 @@ def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
             return parse_ast(ast.left) // parse_ast(ast.right)  # type: ignore
         raise DiceParseError(f"Unsupported BinOp operator '{ast.op}'.")
 
+    if isinstance(ast, d20.ast.Parenthetical):
+        return parse_ast(ast.value)  # type: ignore
+
     if isinstance(ast, d20.ast.Dice):
         count, sides = parse_dimensions(ast.num, ast.size)
         builder = ConvolutionDistributionBuilder(count, sides, [])
@@ -66,18 +69,16 @@ def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
 
     if isinstance(ast, d20.ast.OperatedDice):
         count, sides = parse_dimensions(ast.value.num, ast.value.size)  # type: ignore
-        operations: list[d20.SetOperator] = ast.operations  # type: ignore
+        operations: list[d20.ast.SetOperator] = ast.operations  # type: ignore
 
         contains_non_convolution_operation = any(not ConvolutionDistributionBuilder.supports_operation(op) for op in operations)
 
         if contains_non_convolution_operation:
-            return calculate_dice_distribution(ast.value.num, ast.value.size, ast.operations)  # type: ignore
+            builder = DiscreteDistributionBuilder(count, sides, operations)
         else:
             builder = ConvolutionDistributionBuilder(count, sides, operations)
-            return builder.distribution()
 
-    if isinstance(ast, d20.ast.Parenthetical):
-        return parse_ast(ast.value)  # type: ignore
+        return builder.distribution()
 
     raise DiceParseError(f"Unsupported node type '{type(ast)}'.")
 
