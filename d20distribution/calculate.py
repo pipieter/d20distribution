@@ -8,6 +8,7 @@ import numpy as np
 
 from .distribution import DiceDistribution
 from .errors import InvalidOperationError
+from .limits import DICE_LIMITS, MODIFIED_DICE_LIMITS
 
 
 class AbstractDistributionBuilder(abc.ABC):
@@ -88,6 +89,9 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
     convolution: list[float]
 
     def __init__(self, count: int, sides: int, operations: list[d20.ast.SetOperator]) -> None:
+        if count * sides > DICE_LIMITS:
+            raise InvalidOperationError("Too many dice!")
+
         super().__init__()
         self.count = count
         self.sides = sides
@@ -192,6 +196,9 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
     dist: defaultdict[DiscreteKey, float]
 
     def __init__(self, count: int, sides: int, operations: list[d20.ast.SetOperator]) -> None:
+        if sides**count > MODIFIED_DICE_LIMITS:
+            raise InvalidOperationError("Too many dice!")
+
         super().__init__()
         self.count = count
         self.sides = sides
