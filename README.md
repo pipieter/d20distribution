@@ -19,3 +19,13 @@ print(distribution.mean()) # 8.50
 ## Unsupported Syntax
 
 All valid [d20](https://pypi.org/project/d20/) expressions are supported, except for the following dice modifiers: `rr` and `ra`. These will hopefully be added in the future.
+
+## Using the library interactively
+
+In order to test the library or to visualize distributions, the library can be used interactively by using the command
+
+```bash
+python -m d20distribution
+```
+
+This opens up a command prompt for the user where they can input distributions, which will visualize the distribution.
