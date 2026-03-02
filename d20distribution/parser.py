@@ -1,11 +1,11 @@
 import d20  # pyright: ignore[reportMissingTypeStubs]
 
 from .calculate import ConvolutionDistributionBuilder, DiscreteDistributionBuilder
-from .distribution import DiceDistribution
+from .distribution import Distribution
 from .errors import DiceParseError
 
 
-def parse(expression: str) -> DiceDistribution:
+def parse(expression: str) -> Distribution:
     # Attempt a roll first, to verify that the rolls are actually feasible
     try:
         d20.roll(expression)
@@ -26,12 +26,12 @@ def parse_dimensions(count: int, sides: str | int) -> tuple[int, int]:
     return count, sides
 
 
-def parse_ast(ast: d20.ast.Node) -> DiceDistribution:
+def parse_ast(ast: d20.ast.Node) -> Distribution:
     if isinstance(ast, d20.ast.Expression):
         return parse_ast(ast.roll)  # type: ignore
 
     if isinstance(ast, d20.ast.Literal):
-        return DiceDistribution({ast.value: 1.0})  # type: ignore
+        return Distribution({ast.value: 1.0})  # type: ignore
 
     if isinstance(ast, d20.ast.UnOp):
         if ast.op == "-":

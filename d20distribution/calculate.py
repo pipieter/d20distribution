@@ -6,13 +6,13 @@ from collections.abc import Callable
 import d20  # type: ignore
 import numpy as np
 
-from .distribution import DiceDistribution
+from .distribution import Distribution
 from .errors import InvalidOperationError
 
 
 class AbstractDistributionBuilder(abc.ABC):
     @abc.abstractmethod
-    def distribution(self) -> DiceDistribution: ...
+    def distribution(self) -> Distribution: ...
 
     def apply_operation(self, op: d20.ast.SetOperator) -> None:
         operation_functions = {
@@ -96,14 +96,14 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         for operation in operations:
             self.apply_operation(operation)
 
-    def distribution(self) -> DiceDistribution:
+    def distribution(self) -> Distribution:
         result = np.array([1.0])
         convolution = np.array(self.convolution)
         for _ in range(self.count):
             result = np.convolve(result, convolution)
 
         dist = {k: float(v) for k, v in enumerate(result) if abs(v) >= 1e-10}
-        return DiceDistribution(dist)
+        return Distribution(dist)
 
     @staticmethod
     def supports_operation(operation: d20.ast.SetOperator) -> bool:
@@ -211,11 +211,11 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
         for operation in operations:
             self.apply_operation(operation)
 
-    def distribution(self) -> DiceDistribution:
+    def distribution(self) -> Distribution:
         dist = defaultdict[int, float](float)
         for key, value in self.dist.items():
             dist[sum(key)] += value
-        return DiceDistribution(dict(dist))
+        return Distribution(dict(dist))
 
     @staticmethod
     def _sort_key(key: DiscreteKey) -> DiscreteKey:

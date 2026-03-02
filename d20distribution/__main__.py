@@ -6,11 +6,11 @@ try:
 except:
     ...
 
-from .distribution import DiceDistribution
+from .distribution import Distribution
 from .parser import parse
 
 
-def print_distribution(dist: DiceDistribution, line_width: int) -> None:
+def print_distribution(dist: Distribution, line_width: int) -> None:
     keys = dist.keys()
     values = dist.dist.values()
 

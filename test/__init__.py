@@ -1,6 +1,6 @@
 from typing import Union
 
-from d20distribution.distribution import DiceDistribution
+from d20distribution.distribution import Distribution
 
 TNumeric = Union[int, float]
 
@@ -26,7 +26,7 @@ def approx(value: TNumeric, eps: TNumeric = 1e-6):
     return Approx(value, eps)
 
 
-def assert_distribution(distribution: DiceDistribution, values: list[tuple[int, float]], eps: float = 1e-4) -> None:
+def assert_distribution(distribution: Distribution, values: list[tuple[int, float]], eps: float = 1e-4) -> None:
     for roll, expected in values:
         actual = distribution.get(roll)
         assert actual == approx(expected, eps), f"For key '{roll}' expected {expected}, but received {actual}"
