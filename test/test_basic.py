@@ -1,5 +1,3 @@
-from test import equal
-
 import pytest
 
 from d20distribution import parse
@@ -13,7 +11,7 @@ def test_d20():
     assert len(distribution.dist) == 20
 
     for d in range(distribution.min(), distribution.max() + 1):
-        assert equal(distribution.get(d), 0.05)
+        assert distribution.get(d) == 1 / 20
 
 
 def test_exceptions():
