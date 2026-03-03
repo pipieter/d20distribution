@@ -12,7 +12,7 @@ from .parser import parse
 
 def print_distribution(dist: Distribution, line_width: int) -> None:
     keys = dist.keys()
-    values = dist.dist.values()
+    values = dist.values()
 
     if any(not isinstance(key, int) for key in keys):  # type: ignore # specific case in expression like 0.5 * 1d8, where the values are converted to floats
         raise ValueError("Distribution contains non-integer keys, and cannot be visualized.")
