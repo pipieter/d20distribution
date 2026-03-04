@@ -11,10 +11,27 @@ from .errors import InvalidOperationError
 
 
 class AbstractDistributionBuilder(abc.ABC):
+    """An abstract class used to build distributions."""
+
     @abc.abstractmethod
-    def distribution(self) -> Distribution: ...
+    def distribution(self) -> Distribution:
+        """Build the distribution based on the builder.
+
+        Returns:
+            Distribution: The distribution object matching the current state of the distribution.
+        """
+        ...
 
     def apply_operation(self, op: d20.ast.SetOperator) -> None:
+        """Apply a valid d20 operator to the current distribution. This internally  changes the
+        state of the builder
+
+        Args:
+            op (d20.ast.SetOperator): The operator to be applied.
+
+        Raises:
+            InvalidOperationError: When the operation in question is unknown or not supported.
+        """
         operation_functions = {
             "mi": self.apply_mi,
             "ma": self.apply_ma,
@@ -36,25 +53,73 @@ class AbstractDistributionBuilder(abc.ABC):
         operation_functions[operation](selectors)
 
     @abc.abstractmethod
-    def apply_mi(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_mi(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 minimum operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `mi` operator.
+        """
+        ...
 
     @abc.abstractmethod
-    def apply_ma(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_ma(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 maximum operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `ma` operator.
+        """
+        ...
 
     @abc.abstractmethod
-    def apply_ro(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_ro(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 re-roll once operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `ro` operator.
+        """
+        ...
 
     @abc.abstractmethod
-    def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 explode operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `e` operator.
+        """
+        ...
 
     @abc.abstractmethod
-    def apply_k(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_k(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 keep operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `k` operator.
+        """
+        ...
 
     @abc.abstractmethod
-    def apply_p(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_p(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 drop operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `p` operator.
+        """
+        ...
 
     @staticmethod
     def _matches_selector(value: int, selector: d20.ast.SetSelector) -> bool:
+        """Checks if a given value matches a selector. Only works for selectors that are applied to single elements.
+
+        Args:
+            value (int): The value to be matched.
+            selector (d20.ast.SetSelector): The selector used for matching.
+
+        Raises:
+            InvalidOperationError: When an invalid selector is given or when a selector is given that applies to a set of elements.
+
+        Returns:
+            bool: Whether the value matched the selector.
+        """
         cat: str | None = selector.cat
 
         if cat in ["", None]:
@@ -83,23 +148,30 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
         InvalidOperationError: When an invalid operator is passed as an argument. Certain operations are not possible using convolutions.
     """
 
-    count: int
-    sides: int
-    convolution: list[float]
+    _count: int
+    _sides: int
+    _convolution: list[float]
 
     def __init__(self, count: int, sides: int, operations: list[d20.ast.SetOperator]) -> None:
+        """Create a convolution distribution builder.
+
+        Args:
+            count (int): The number of dice in the expression.
+            sides (int): The sides of the dice in the expression.
+            operations (list[d20.ast.SetOperator]): A list of operators to be applied to the expression.
+        """
         super().__init__()
-        self.count = count
-        self.sides = sides
-        self.convolution = [0] + [1 / sides] * sides
+        self._count = count
+        self._sides = sides
+        self._convolution = [0] + [1 / sides] * sides
 
         for operation in operations:
             self.apply_operation(operation)
 
     def distribution(self) -> Distribution:
         result = np.array([1.0])
-        convolution = np.array(self.convolution)
-        for _ in range(self.count):
+        convolution = np.array(self._convolution)
+        for _ in range(self._count):
             result = np.convolve(result, convolution)
 
         dist = {k: float(v) for k, v in enumerate(result) if abs(v) >= 1e-10}
@@ -107,6 +179,14 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
 
     @staticmethod
     def supports_operation(operation: d20.ast.SetOperator) -> bool:
+        """Checks if the ConvolutionDistributionBuilder supports an operation.
+
+        Args:
+            operation (d20.ast.SetOperator): The operation to be checked.
+
+        Returns:
+            bool: Whether the operation is supported.
+        """
         invalid_operations = ["e", "ra"]
         invalid_selector_categories = ["h", "l"]
 
@@ -127,11 +207,11 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
             num: int = selector.num
 
             # Extend the convolution
-            padding = num - len(self.convolution) + 1
-            self.convolution.extend([0] * padding)
+            padding = num - len(self._convolution) + 1
+            self._convolution.extend([0] * padding)
             for i in range(1, num):
-                self.convolution[num] += self.convolution[i]
-                self.convolution[i] = 0
+                self._convolution[num] += self._convolution[i]
+                self._convolution[i] = 0
 
     def apply_ma(self, selectors: list[d20.ast.SetSelector]) -> None:
         for selector in selectors:
@@ -139,95 +219,117 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
                 raise InvalidOperationError(f"Unsupported selector category for ma: '{selector.cat}'")
 
             num: int = selector.num
-            for i in range(num + 1, len(self.convolution)):
-                self.convolution[num] += self.convolution[i]
-                self.convolution[i] = 0
+            for i in range(num + 1, len(self._convolution)):
+                self._convolution[num] += self._convolution[i]
+                self._convolution[i] = 0
 
     def apply_k(self, selectors: list[d20.ast.SetSelector]) -> None:
         for selector in selectors:
-            for i in range(1, len(self.convolution)):
+            for i in range(1, len(self._convolution)):
                 if not self._matches_selector(i, selector):
-                    self.convolution[0] += self.convolution[i]
-                    self.convolution[i] = 0
+                    self._convolution[0] += self._convolution[i]
+                    self._convolution[i] = 0
 
     def apply_p(self, selectors: list[d20.ast.SetSelector]) -> None:
         for selector in selectors:
-            for i in range(1, len(self.convolution)):
+            for i in range(1, len(self._convolution)):
                 if self._matches_selector(i, selector):
-                    self.convolution[0] += self.convolution[i]
-                    self.convolution[i] = 0
+                    self._convolution[0] += self._convolution[i]
+                    self._convolution[i] = 0
 
     def apply_ro(self, selectors: list[d20.ast.SetSelector]) -> None:
         for selector in selectors:
-            reroll = 1 / self.sides
+            reroll = 1 / self._sides
             odds_occurring = 0
             odds_not_occurring = 0
             sides_not_occurring = 0
 
             # Calculate the odds of event occuring
-            for i in range(1, len(self.convolution)):
+            for i in range(1, len(self._convolution)):
                 if self._matches_selector(i, selector):
-                    odds_occurring += self.convolution[i]
+                    odds_occurring += self._convolution[i]
                 else:
-                    odds_not_occurring += self.convolution[i]
+                    odds_not_occurring += self._convolution[i]
                     sides_not_occurring += 1
 
             # Re-calculate the odds
-            for i in range(1, len(self.convolution)):
+            for i in range(1, len(self._convolution)):
                 if self._matches_selector(i, selector):
-                    self.convolution[i] = odds_occurring * reroll
+                    self._convolution[i] = odds_occurring * reroll
                 else:
-                    self.convolution[i] += odds_not_occurring * reroll / sides_not_occurring
+                    self._convolution[i] += odds_not_occurring * reroll / sides_not_occurring
 
     def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None:
         raise InvalidOperationError(f"Explode operator not supported fro ConvolutionDistributionBuilder")
 
 
+# Internal representation of a discrete key, which is a tuple of ints
 DiscreteKey = tuple[int, ...]
 
 
 class DiscreteDistributionBuilder(AbstractDistributionBuilder):
-    count: int
-    sides: int
-    dist: defaultdict[DiscreteKey, float]
+    _count: int
+    _sides: int
+    _dist: defaultdict[DiscreteKey, float]
 
     def __init__(self, count: int, sides: int, operations: list[d20.ast.SetOperator]) -> None:
+        """Create a discrete distribution builder.
+
+        Args:
+            count (int): The number of dice in the expression.
+            sides (int): The sides of the dice in the expression.
+            operations (list[d20.ast.SetOperator]): A list of operators to be applied to the expression.
+        """
         super().__init__()
-        self.count = count
-        self.sides = sides
-        self.dist = defaultdict(float)
+        self._count = count
+        self._sides = sides
+        self._dist = defaultdict(float)
 
         # Build distribution
         for raw_key in itertools.product(range(1, sides + 1), repeat=count):
             key = self._sort_key(raw_key)
-            self.dist[key] += 1
+            self._dist[key] += 1
 
         # Normalize the distribution
-        total = sum(self.dist.values())
-        for key in self.dist:
-            self.dist[key] = self.dist[key] / total
-        assert abs(sum(self.dist.values()) - 1) < 1e-8
+        total = sum(self._dist.values())
+        for key in self._dist:
+            self._dist[key] = self._dist[key] / total
+        assert abs(sum(self._dist.values()) - 1) < 1e-8
 
         for operation in operations:
             self.apply_operation(operation)
 
     def distribution(self) -> Distribution:
         dist = defaultdict[int, float](float)
-        for key, value in self.dist.items():
+        for key, value in self._dist.items():
             dist[sum(key)] += value
         return Distribution(dict(dist))
 
     @staticmethod
     def _sort_key(key: DiscreteKey) -> DiscreteKey:
+        """Sort a key in order to ensure consistency within the dictionary and improve performance.
+
+        Args:
+            key (DiscreteKey): The key to be sorted.
+
+        Returns:
+            DiscreteKey: The sorted key.
+        """
         return tuple(sorted(key))
 
     def _transform_keys(self, transform: Callable[[DiscreteKey], DiscreteKey]) -> None:
+        """Transform the internal keys based on a transform function. If the function would map multiple keys
+        to the same new key, the old keys' probabilities will be added up for the probability of the new key.
+
+        Args:
+            transform (Callable[[DiscreteKey], DiscreteKey]): A transform function that transform a key into another key.
+        """
         new_dist = defaultdict[DiscreteKey, float](float)
-        for key, value in self.dist.items():
+        for key, value in self._dist.items():
             new_key = transform(key)
             new_key = self._sort_key(new_key)
             new_dist[new_key] += value
-        self.dist = new_dist
+        self._dist = new_dist
 
     def apply_mi(self, selectors: list[d20.ast.SetSelector]) -> None:
         def apply_mi_to_key(key: DiscreteKey, min_value: int) -> DiscreteKey:
@@ -358,9 +460,9 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
         for selector in selectors:
             new_dist = defaultdict[DiscreteKey, float](float)
-            for key in self.dist:
-                odds = self.dist.get(key, 0)
-                rerolls = get_reroll_dice_possibilities(key, self.sides, selector.cat, selector.num)
+            for key in self._dist:
+                odds = self._dist.get(key, 0)
+                rerolls = get_reroll_dice_possibilities(key, self._sides, selector.cat, selector.num)
                 for reroll in rerolls:
                     reroll_key = self._sort_key(reroll)
                     reroll_odds = odds / len(rerolls)
@@ -369,7 +471,7 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             # Assert that the new distribution is also normalized
             assert abs(sum(new_dist.values()) - 1) < 1e-6
 
-            self.dist = new_dist
+            self._dist = new_dist
 
     def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None:
         def should_explode(selector: d20.ast.SetSelector, value: int) -> bool:
@@ -424,4 +526,4 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
             return new_dist
 
         for selector in selectors:
-            self.dist = apply_explode(self.dist, selector, 1.0, ())
+            self._dist = apply_explode(self._dist, selector, 1.0, ())

@@ -8,7 +8,7 @@ def test_d20():
     distribution = parse("1d20")
     assert distribution.min() == 1
     assert distribution.max() == 20
-    assert len(distribution.dist) == 20
+    assert len(list(distribution.keys())) == 20
 
     for d in range(distribution.min(), distribution.max() + 1):
         assert distribution.get(d) == 1 / 20
