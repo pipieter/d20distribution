@@ -335,7 +335,6 @@ def test_ra_4d6_low():
     assert_distribution(distribution, values)
 
 
-
 def test_chain():
     distribution = parse("2d12rol1mi3")
 
