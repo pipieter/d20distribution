@@ -168,12 +168,13 @@ class Distribution(object):
 
     def __floordiv__(self, other: "Distribution") -> "Distribution":
         """Divide two distributions from each other, e.g. 1d20 / 1d4. Note that this is the floor
-        division, and not the true division, as distribution keys need to be integers. As is the
-         case with all division operations, a ZeroDivisionError can be thrown in case one of the
-         keys of the divisor is zero.
+        division, and not the true division, as distribution keys need to be integers.
 
         Args:
             other (Distribution): The divisor of the division.
+
+        Raises:
+            ZeroDivisionError: When one of the possible keys in the divisor is zero.
 
         Returns:
             Distribution: The division of the two distributions.
