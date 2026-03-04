@@ -39,9 +39,9 @@ class AbstractDistributionBuilder(abc.ABC):
             "e": self.apply_e,
             "k": self.apply_k,
             "p": self.apply_p,
+            "ra": self.apply_ra,
             # Unimplemented operations
             # "rr": self.apply_rr,
-            # "ra": self.apply_ra,
         }
 
         operation: str = op.op
@@ -103,6 +103,15 @@ class AbstractDistributionBuilder(abc.ABC):
 
         Args:
             selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `p` operator.
+        """
+        ...
+
+    @abc.abstractmethod
+    def apply_ra(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 reroll and add operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `ra` operator.
         """
         ...
 
@@ -260,7 +269,10 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
                     self._convolution[i] += odds_not_occurring * reroll / sides_not_occurring
 
     def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None:
-        raise InvalidOperationError(f"Explode operator not supported fro ConvolutionDistributionBuilder")
+        raise InvalidOperationError(f"Explode operator not supported for ConvolutionDistributionBuilder")
+
+    def apply_ra(self, selectors: list[d20.ast.SetSelector]) -> None:
+        raise InvalidOperationError(f"Reroll and add operator not supported for ConvolutionDistributionBuilder")
 
 
 # Internal representation of a discrete key, which is a tuple of ints
@@ -527,3 +539,32 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
 
         for selector in selectors:
             self._dist = apply_explode(self._dist, selector, 1.0, ())
+
+    def apply_ra(self, selectors: list[d20.ast.SetSelector]) -> None:
+        for selector in selectors:
+            new_dist = defaultdict[DiscreteKey, float](float)
+            for key, probability in self._dist.items():
+                # Check if the key matches the selector
+                matches = False
+
+                # If the selector is highest or lowest, and at least one element is selected,
+                # then it is always true
+                if selector.cat in ["h", "l"] and selector.num > 0:
+                    matches = True
+
+                # Otherwise, check if at least one value in the key matches
+                elif any(self._matches_selector(value, selector) for value in key):
+                    matches = True
+
+                if not matches:
+                    new_dist[key] += probability
+                else:
+                    # At this point, the matches, and we just need to add the newly rolled value
+                    # to the key, and distribute the probability over all possibilities
+                    probability_per_roll = probability / self._sides
+                    for roll in range(1, self._sides + 1):
+                        new_key = key + (roll,)
+                        new_key = self._sort_key(new_key)
+                        new_dist[new_key] += probability_per_roll
+
+            self._dist = new_dist

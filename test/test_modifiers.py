@@ -281,6 +281,60 @@ def test_e_lt():
         assert actual > base_odds, msg
 
 
+def test_ra_1d6():
+    distribution = parse("1d6ra6")
+
+    # Verified using anydice.com
+    # set "explode depth" to 1
+    # output [explode 1d6]
+
+    values = [
+        (1, 0.166666666667),
+        (2, 0.166666666667),
+        (3, 0.166666666667),
+        (4, 0.166666666667),
+        (5, 0.166666666667),
+        (7, 0.0277777777778),
+        (8, 0.0277777777778),
+        (9, 0.0277777777778),
+        (10, 0.0277777777778),
+        (11, 0.0277777777778),
+        (12, 0.0277777777778),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_ra_4d6_low():
+    distribution = parse("2d6ra<4")
+
+    # Verified using anydice.com
+    #
+    # function: reroll and add A:s on less than N:n with B:s {
+    #   if (A < N) > 0 { result: A + B}
+    #   result: A
+    # }
+    # output [reroll and add 2d6 on less than 4 with 1d6]
+
+    values = [
+        (3, 0.00462962962963),
+        (4, 0.0138888888889),
+        (5, 0.0277777777778),
+        (6, 0.0462962962963),
+        (7, 0.0694444444444),
+        (8, 0.1250000000000),
+        (9, 0.166666666667),
+        (10, 0.194444444444),
+        (11, 0.152777777778),
+        (12, 0.106481481481),
+        (13, 0.0555555555556),
+        (14, 0.0277777777778),
+        (15, 0.00925925925926),
+    ]
+
+    assert_distribution(distribution, values)
+
+
 def test_chain():
     distribution = parse("2d12rol1mi3")
 
