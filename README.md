@@ -18,7 +18,7 @@ print(distribution.mean()) # 8.50
 
 ## Unsupported Syntax
 
-All valid [d20](https://pypi.org/project/d20/) expressions are supported, except for the following dice modifiers: `rr` and `ra`. These will hopefully be added in the future.
+All valid [d20](https://pypi.org/project/d20/) expressions are supported, except for the following `rr` dice modifiers. This will hopefully be added in the future.
 
 ## Performance
 
@@ -26,7 +26,7 @@ Internally, two distribution builders are used depending on the modifiers used. 
 
 More specifically, the discrete key builder is used in the following cases:
 
-- The `e` and `ra` modifiers are used (though the `ra` modifier isn't implemented).
+- The `e` and `ra` modifiers are used.
 - The `h` and `l` selectors are used for any modifier.
 
 Care should thus be taken in these scenarios, as the execution time can exponentially increase with the number of dice and the number of sides the dice have. This library does not utilize any internal limits, and it is up to the user to avoid overly complex expressions.
