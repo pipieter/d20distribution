@@ -1,6 +1,8 @@
 import abc
-import d20  # type: ignore
 from collections import defaultdict
+
+import d20  # type: ignore
+
 from .distribution import Distribution
 
 class AbstractDistributionBuilder(abc.ABC):
