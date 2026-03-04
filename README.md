@@ -18,7 +18,7 @@ print(distribution.mean()) # 8.50
 
 ## Unsupported Syntax
 
-All valid [d20](https://pypi.org/project/d20/) expressions are supported, except for the following `rr` dice modifiers. This will hopefully be added in the future.
+All valid [d20](https://pypi.org/project/d20/) expressions are supported, except for the following `rr` dice modifier. This will hopefully be added in the future.
 
 ## Performance
 
