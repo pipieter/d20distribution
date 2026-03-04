@@ -1,4 +1,4 @@
-__all__ = ("DiceParseError",)
+__all__ = ("DiceParseError", "InvalidOperationError")
 
 
 class DiceParseError(Exception):
