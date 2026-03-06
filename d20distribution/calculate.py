@@ -40,8 +40,7 @@ class AbstractDistributionBuilder(abc.ABC):
             "k": self.apply_k,
             "p": self.apply_p,
             "ra": self.apply_ra,
-            # Unimplemented operations
-            # "rr": self.apply_rr,
+            "rr": self.apply_rr,
         }
 
         operation: str = op.op
@@ -115,6 +114,15 @@ class AbstractDistributionBuilder(abc.ABC):
         """
         ...
 
+    @abc.abstractmethod
+    def apply_rr(self, selectors: list[d20.ast.SetSelector]) -> None:
+        """Apply the d20 repeated reroll operator to the builder.
+
+        Args:
+            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `rr` operator.
+        """
+        ...
+
     @staticmethod
     def _matches_selector(value: int, selector: d20.ast.SetSelector) -> bool:
         """Checks if a given value matches a selector. Only works for selectors that are applied to single elements.
@@ -140,7 +148,40 @@ class AbstractDistributionBuilder(abc.ABC):
         if cat == ">":
             return value > selector.num
 
-        raise InvalidOperationError(f"Invalid operation found between value '{value}' and '{str(cat)}'")
+        raise InvalidOperationError(f"Invalid operation found between value '{value}' and '{str(selector)}'")
+
+    @staticmethod
+    def _creates_infinite_rr_loop(count: int, sides: int, selector: d20.ast.SetSelector) -> bool:
+        """Check if a selector would cause an infinite loop when matched with the rr modifier.
+
+        Args:
+            count (int): The amount of dice.
+            sides (int): The amount of sides of each die.
+            selector (d20.ast.SetSelector): The selector used for the rr operation modifier.
+
+        Returns:
+            bool: Whether the selector would create an infinite loop.
+        """
+        if count == 0:
+            return False
+
+        # e.g. 1d6rrl1
+        if selector.cat in ["h", "l"]:
+            return selector.num > 0
+
+        # e.g. 1d6rr<7
+        if selector.cat == "<" and sides < selector.num:
+            return True
+
+        # e.g. 1d6rr>0
+        if selector.cat == ">" and selector.num == 0:
+            return True
+
+        # Specific case, re-rolling a one on a one-sided die, 1d1rr1
+        if sides == 1 and selector.cat in [None, ""] and selector.num == 1:
+            return True
+
+        return False
 
 
 class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
@@ -273,6 +314,35 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
 
     def apply_ra(self, selectors: list[d20.ast.SetSelector]) -> None:
         raise InvalidOperationError(f"Reroll and add operator not supported for ConvolutionDistributionBuilder")
+
+    def apply_rr(self, selectors: list[d20.ast.SetSelector]) -> None:
+        for selector in selectors:
+            if self._creates_infinite_rr_loop(self._count, self._sides, selector):
+                raise InvalidOperationError(
+                    f"Selector {str(selector)} will result in an infinite rr reroll loop for {self._count}d{self._sides}!"
+                )
+
+            # In order to calculate the re-roll odds, we first find all the values that would be re-rolled,
+            # and then we equally distribute the total probabilities of those rolls to all the values in the
+            # range [1, sides].
+            matched_values: list[int] = []
+            target_values: list[int] = []
+
+            for i in range(1, len(self._convolution)):
+                if self._matches_selector(i, selector):
+                    matched_values.append(i)
+                elif i <= self._sides:
+                    target_values.append(i)
+
+            if len(target_values) == 0:
+                raise InvalidOperationError(f"Selector {str(selector)} could not be re-rolled for {self._count}d{self._sides}!")
+
+            total_probability = sum(self._convolution[i] for i in matched_values)
+            probability_per_target = total_probability / len(target_values)
+            for value in matched_values:
+                self._convolution[value] = 0
+            for value in target_values:
+                self._convolution[value] += probability_per_target
 
 
 # Internal representation of a discrete key, which is a tuple of ints
@@ -566,5 +636,68 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
                         new_key = key + (roll,)
                         new_key = self._sort_key(new_key)
                         new_dist[new_key] += probability_per_roll
+
+            self._dist = new_dist
+
+    def apply_rr(self, selectors: list[d20.ast.SetSelector]) -> None:
+        def get_repeated_reroll_dice_probabilities(
+            dice: DiscreteKey, sides: int, selector: d20.ast.SetSelector
+        ) -> dict[DiscreteKey, float]:
+            """Get the repeated reroll distribution of re-rolling a single key.
+
+            Args:
+                dice (DiscreteKey): The key to reroll on.
+                sides (int): The number of sides of the dice.
+                selector (d20.ast.SetSelector): The selector of the re-roll.
+
+            Returns:
+                dict[DiscreteKey, float]: A distribution containing the keys and their rerolled values. The total probabilities add up to one.
+            """
+
+            if len(dice) == 0:
+                return {(): 1.0}
+
+            value, *rest = dice
+
+            # The current value does not need to be rerolled
+            if not self._matches_selector(value, selector):
+                new_dist = defaultdict[DiscreteKey, float](float)
+                sub_dist = get_repeated_reroll_dice_probabilities(tuple(rest), sides, selector)
+                for sub_key, probability in sub_dist.items():
+                    new_key = self._sort_key((value,) + sub_key)
+                    new_dist[new_key] += probability
+                return new_dist
+
+            # The current value does need to be rerolled
+            possible_reroll_values: list[int] = []
+            for possible_value in range(1, sides + 1):
+                # Get a list of all values that will not be re-rolled, so the probability
+                # can be distributed over them.
+                if not self._matches_selector(possible_value, selector):
+                    possible_reroll_values.append(possible_value)
+
+            if len(possible_reroll_values) == 0:
+                raise InvalidOperationError(f"Selector {str(selector)} could not be re-rolled for {self._count}d{self._sides}!")
+
+            new_dist = defaultdict[DiscreteKey, float](float)
+            sub_dist = get_repeated_reroll_dice_probabilities(tuple(rest), sides, selector)
+            probability_per_reroll_value = 1.0 / len(possible_reroll_values)
+            for reroll_value in possible_reroll_values:
+                for sub_key, probability in sub_dist.items():
+                    new_key = self._sort_key((reroll_value,) + sub_key)
+                    new_dist[new_key] += probability * probability_per_reroll_value
+            return new_dist
+
+        for selector in selectors:
+            if self._creates_infinite_rr_loop(self._count, self._sides, selector):
+                raise InvalidOperationError(
+                    f"Selector {str(selector)} will result in an infinite rr reroll loop for {self._count}d{self._sides}!"
+                )
+
+            new_dist = defaultdict[DiscreteKey, float](float)
+            for key, probability in self._dist.items():
+                sub_dist = get_repeated_reroll_dice_probabilities(key, self._sides, selector)
+                for new_key, sub_probability in sub_dist.items():
+                    new_dist[new_key] += probability * sub_probability
 
             self._dist = new_dist

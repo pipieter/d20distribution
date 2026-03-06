@@ -3,7 +3,7 @@ from test import approx, assert_distribution
 import pytest
 
 from d20distribution import parse
-from d20distribution.errors import InvalidOperationError
+from d20distribution.errors import DiceParseError, InvalidOperationError
 
 
 def test_mi():
@@ -103,12 +103,6 @@ def test_modifiers_ph():
     ]
 
     assert_distribution(distribution, values)
-
-
-def test_modifiers_rr_unsupported():
-    # rr is currently unsupported
-    with pytest.raises(InvalidOperationError):
-        parse("1d20rr1")
 
 
 def test_ro_1():
@@ -333,6 +327,74 @@ def test_ra_4d6_low():
     ]
 
     assert_distribution(distribution, values)
+
+
+def test_rr_1():
+    distribution = parse("1d6rr1")
+
+    # This should be equivalent to 1d5+1
+    values = [
+        (2, 0.2),
+        (3, 0.2),
+        (4, 0.2),
+        (5, 0.2),
+        (6, 0.2),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_rr_lt5():
+    distribution = parse("1d6rr<5")
+
+    # This should be equivalent to 1d2+4
+    values = [
+        (5, 0.5),
+        (6, 0.5),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_rr_equal():
+    distribution = parse("2d6mi6rr>4")
+
+    # Verified using anydice.com
+    # all dice will be re-rolled, and the new dice will be equivalent to 2d4
+    values = [
+        (2, 0.0625),
+        (3, 0.1250),
+        (4, 0.1875),
+        (5, 0.2500),
+        (6, 0.1875),
+        (7, 0.1250),
+        (8, 0.0625),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+@pytest.mark.parametrize(
+    "infinite, expression",
+    [
+        (True, "1d6rr<7"),
+        (True, "1d6rr>0"),
+        (True, "1d6rrl1"),
+        (True, "1d6rrh4"),
+        (True, "1d1rr1"),
+        (True, "1d6rrl0"),
+        (True, "1d6rrh0"),
+        (False, "1d6rr1"),
+        (False, "1d6rr<6"),
+        (False, "1d6rr>1"),
+    ],
+)
+def test_rr_infinite_loops(infinite: bool, expression: str):
+    if infinite:
+        with pytest.raises((InvalidOperationError, DiceParseError)):
+            parse(expression)
+    else:
+        parse(expression)
 
 
 def test_chain():
