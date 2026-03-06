@@ -1,9 +1,9 @@
-import pytest
-
 from test import approx, assert_distribution
 
+import pytest
+
 from d20distribution import parse
-from d20distribution.errors import InvalidOperationError, DiceParseError
+from d20distribution.errors import DiceParseError, InvalidOperationError
 
 
 def test_mi():
