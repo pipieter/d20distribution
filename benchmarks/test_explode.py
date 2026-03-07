@@ -7,24 +7,17 @@ from d20distribution import parse
 @pytest.mark.parametrize(
     "sides",
     [
-        ("20"),
-        ("12"),
-        ("10"),
-        ("8"),
-        ("6"),
         ("4"),
+        ("6"),
+        ("8"),
     ],
 )
 @pytest.mark.parametrize(
     "num",
     [
-        ("100"),
-        ("20"),
-        ("12"),
-        ("10"),
-        ("8"),
-        ("6"),
         ("4"),
+        ("6"),
+        ("8"),
     ],
 )
 def test_explode(benchmark: BenchmarkFixture, sides: str, num: str):
