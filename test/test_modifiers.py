@@ -127,6 +127,7 @@ def test_ro_1d6lt4():
 
     assert_distribution(distribution, values)
 
+
 def test_ro_1d6gt4():
     distribution = parse("1d6ro>4")
 
