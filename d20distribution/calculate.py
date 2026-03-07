@@ -290,24 +290,19 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
     def apply_ro(self, selectors: list[d20.ast.SetSelector]) -> None:
         for selector in selectors:
             reroll = 1 / self._sides
-            odds_occurring = 0
-            odds_not_occurring = 0
-            sides_not_occurring = 0
+            odds_rerolling = 0
 
-            # Calculate the odds of event occuring
+            # Calculate the odds of event occurring
             for i in range(1, len(self._convolution)):
                 if self._matches_selector(i, selector):
-                    odds_occurring += self._convolution[i]
-                else:
-                    odds_not_occurring += self._convolution[i]
-                    sides_not_occurring += 1
+                    odds_rerolling += self._convolution[i]
 
             # Re-calculate the odds
             for i in range(1, len(self._convolution)):
                 if self._matches_selector(i, selector):
-                    self._convolution[i] = odds_occurring * reroll
+                    self._convolution[i] = odds_rerolling * reroll
                 else:
-                    self._convolution[i] += odds_not_occurring * reroll / sides_not_occurring
+                    self._convolution[i] += odds_rerolling * reroll
 
     def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None:
         raise InvalidOperationError(f"Explode operator not supported for ConvolutionDistributionBuilder")

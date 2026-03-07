@@ -105,7 +105,7 @@ def test_modifiers_ph():
     assert_distribution(distribution, values)
 
 
-def test_ro_1():
+def test_ro_1d4ro1():
     distribution = parse("1d4ro1")
 
     values = [(1, 0.0625), (2, 0.3125), (3, 0.3125), (4, 0.3125)]
@@ -113,7 +113,37 @@ def test_ro_1():
     assert_distribution(distribution, values)
 
 
-def test_ro_2():
+def test_ro_1d6lt4():
+    distribution = parse("1d6ro<4")
+
+    values = [
+        (1, 0.08333),
+        (2, 0.08333),
+        (3, 0.08333),
+        (4, 0.25000),
+        (5, 0.25000),
+        (6, 0.25000),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_ro_1d6gt4():
+    distribution = parse("1d6ro>4")
+
+    values = [
+        (1, 0.22222),
+        (2, 0.22222),
+        (3, 0.22222),
+        (4, 0.22222),
+        (5, 0.05555),
+        (6, 0.05555),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_ro_2d12lo1():
     distribution = parse("2d12rol1")
 
     # Verified using anydice.com
