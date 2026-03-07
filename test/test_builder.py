@@ -50,7 +50,6 @@ def test_builders(count: int, sides: int, operators: list[d20.ast.SetOperator]):
     convolution = ConvolutionDistributionBuilder(count, sides, operators).distribution()
     discrete = DiscreteDistributionBuilder(count, sides, operators).distribution()
 
-    print(list(str(op) for op in operators))
     assert convolution.keys() == discrete.keys()
 
     for key in convolution.keys():
