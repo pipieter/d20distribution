@@ -20,23 +20,37 @@ def operator(op: str, sel: tuple[str | None, int]):
     return d20.ast.SetOperator(op, [d20.ast.SetSelector(cat, num)])
 
 
+@pytest.mark.parametrize("count", [1, 2, 3, 4])
+@pytest.mark.parametrize("sides", [4, 6, 8, 12])
 @pytest.mark.parametrize(
-    "count,sides,operators",
+    "operators",
     [
-        (1, 6, [operator("ma", (None, 4))]),
-        (1, 6, [operator("mi", (None, 2))]),
-        (1, 6, [operator("k", ("<", 4))]),
-        (1, 6, [operator("p", ("<", 4))]),
-        (1, 6, [operator("rr", (None, 4))]),
-        (1, 6, [operator("rr", ("<", 4))]),
-        (1, 6, [operator("rr", (">", 4))]),
-        (1, 6, [operator("p", ("<", 3)), operator("rr", (">", 4))]),
+        [operator("ma", (None, 4))],
+        [operator("mi", (None, 2))],
+        [operator("k", (None, 4))],
+        [operator("p", (None, 4))],
+        [operator("k", ("<", 4))],
+        [operator("p", ("<", 4))],
+        [operator("k", (">", 4))],
+        [operator("p", (">", 4))],
+        [operator("rr", (None, 4))],
+        [operator("rr", ("<", 4))],
+        [operator("rr", (">", 4))],
+        [operator("ro", (None, 4))],
+        [operator("ro", ("<", 4))],
+        [operator("ro", (">", 4))],
+        [operator("p", ("<", 3)), operator("rr", (">", 4))],
+        [operator("rr", (">", 4)), operator("p", ("<", 3))],
+        [operator("p", ("<", 3)), operator("ro", (">", 4))],
+        [operator("k", (None, 3)), operator("mi", (None, 2))],
+        [operator("mi", (None, 2)), operator("k", (">", 3))],
     ],
 )
 def test_builders(count: int, sides: int, operators: list[d20.ast.SetOperator]):
     convolution = ConvolutionDistributionBuilder(count, sides, operators).distribution()
     discrete = DiscreteDistributionBuilder(count, sides, operators).distribution()
 
+    print(list(str(op) for op in operators))
     assert convolution.keys() == discrete.keys()
 
     for key in convolution.keys():
