@@ -127,6 +127,20 @@ def test_ro_1d6lt4():
 
     assert_distribution(distribution, values)
 
+def test_ro_1d6gt4():
+    distribution = parse("1d6ro>4")
+
+    values = [
+        (1, 0.22222),
+        (2, 0.22222),
+        (3, 0.22222),
+        (4, 0.22222),
+        (5, 0.05555),
+        (6, 0.05555),
+    ]
+
+    assert_distribution(distribution, values)
+
 
 def test_ro_2d12lo1():
     distribution = parse("2d12rol1")
