@@ -1,4 +1,4 @@
-from test import assert_anydice, equal
+from test import assert_distribution
 
 from d20distribution import parse
 
@@ -6,28 +6,27 @@ from d20distribution import parse
 def test_0d6():
     distribution = parse("0d6")
 
-    assert equal(distribution.get(0), 1.0)
-    assert equal(distribution.get(1), 0.0)
-    assert equal(distribution.get(2), 0.0)
-    assert equal(distribution.get(3), 0.0)
-    assert equal(distribution.get(4), 0.0)
-    assert equal(distribution.get(5), 0.0)
-    assert equal(distribution.get(6), 0.0)
+    assert_distribution(distribution, [(0, 1.0)])
 
 
 def test_d6():
     distribution = parse("1d6")
 
-    assert equal(distribution.get(1), 0.166666)
-    assert equal(distribution.get(2), 0.166666)
-    assert equal(distribution.get(3), 0.166666)
-    assert equal(distribution.get(4), 0.166666)
-    assert equal(distribution.get(5), 0.166666)
-    assert equal(distribution.get(6), 0.166666)
+    values = [
+        (1, 1 / 6),
+        (2, 1 / 6),
+        (3, 1 / 6),
+        (4, 1 / 6),
+        (5, 1 / 6),
+        (6, 1 / 6),
+    ]
+
+    assert_distribution(distribution, values)
 
 
 def test_3d6():
     distribution = parse("3d6")
+
     # Verified using anydice.com
     values = [
         (3, 0.0046296296296),
@@ -48,7 +47,7 @@ def test_3d6():
         (18, 0.0046296296296),
     ]
 
-    assert_anydice(distribution, values)
+    assert_distribution(distribution, values)
 
 
 def test_12d8():
@@ -143,12 +142,13 @@ def test_12d8():
         (96, 0.0145519152284e-9),
     ]
 
-    assert_anydice(distribution, values)
+    assert_distribution(distribution, values)
 
 
 def test_complex_expression():
     distribution = parse("16d12 - 3d6 + 2d4 + 5")
 
+    # Verified using anydice.com
     values = [
         (5, 0.0156504319828e-19),
         (6, 0.0328659071638e-18),
@@ -350,4 +350,124 @@ def test_complex_expression():
         (202, 0.0156504319828e-19),
     ]
 
-    assert_anydice(distribution, values)
+    assert_distribution(distribution, values)
+
+
+def test_advantage():
+    distribution = parse("1d20").advantage()
+
+    # Verified using anydice.com
+    values = [
+        (1, 0.0025),
+        (2, 0.0075),
+        (3, 0.0125),
+        (4, 0.0175),
+        (5, 0.0225),
+        (6, 0.0275),
+        (7, 0.0325),
+        (8, 0.0375),
+        (9, 0.0425),
+        (10, 0.0475),
+        (11, 0.0525),
+        (12, 0.0575),
+        (13, 0.0625),
+        (14, 0.0675),
+        (15, 0.0725),
+        (16, 0.0775),
+        (17, 0.0825),
+        (18, 0.0875),
+        (19, 0.0925),
+        (20, 0.0975),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_advantage_5():
+    distribution = parse("1d20").advantage(count=5)
+
+    # Verified using anydice.com
+    values = [
+        (1, 0.0000003125),
+        (2, 0.0000096875),
+        (3, 0.0000659375),
+        (4, 0.0002440625),
+        (5, 0.0006565625),
+        (6, 0.0014534375),
+        (7, 0.0028221875),
+        (8, 0.0049878125),
+        (9, 0.0082128125),
+        (10, 0.0127971875),
+        (11, 0.0190784375),
+        (12, 0.0274315625),
+        (13, 0.0382690625),
+        (14, 0.0520409375),
+        (15, 0.0692346875),
+        (16, 0.0903753125),
+        (17, 0.1160253125),
+        (18, 0.1467846875),
+        (19, 0.1832909375),
+        (20, 0.2262190625),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_disadvantage():
+    distribution = parse("1d20").disadvantage()
+
+    # Verified using anydice.com
+    values = [
+        (1, 0.0975),
+        (2, 0.0925),
+        (3, 0.0875),
+        (4, 0.0825),
+        (5, 0.0775),
+        (6, 0.0725),
+        (7, 0.0675),
+        (8, 0.0625),
+        (9, 0.0575),
+        (10, 0.0525),
+        (11, 0.0475),
+        (12, 0.0425),
+        (13, 0.0375),
+        (14, 0.0325),
+        (15, 0.0275),
+        (16, 0.0225),
+        (17, 0.0175),
+        (18, 0.0125),
+        (19, 0.0075),
+        (20, 0.0025),
+    ]
+
+    assert_distribution(distribution, values)
+
+
+def test_disadvantage_4():
+    distribution = parse("1d20").disadvantage(count=4)
+
+    # Verified using anydice.com
+    values = [
+        (1, 0.18549375),
+        (2, 0.15840625),
+        (3, 0.13409375),
+        (4, 0.11240625),
+        (5, 0.09319375),
+        (6, 0.07630625),
+        (7, 0.06159375),
+        (8, 0.04890625),
+        (9, 0.03809375),
+        (10, 0.02900625),
+        (11, 0.02149375),
+        (12, 0.01540625),
+        (13, 0.01059375),
+        (14, 0.00690625),
+        (15, 0.00419375),
+        (16, 0.00230625),
+        (17, 0.00109375),
+        (18, 0.00040625),
+        (19, 0.00009375),
+        (20, 0.00000625),
+    ]
+
+    assert_distribution(distribution, values)

@@ -18,4 +18,25 @@ print(distribution.mean()) # 8.50
 
 ## Unsupported Syntax
 
-All valid [d20](https://pypi.org/project/d20/) expressions are supported, except for the following dice modifiers: `rr` and `ra`. These will hopefully be added in the future.
+All valid [d20](https://pypi.org/project/d20/) expressions are supported, and it is suggested for the user to check their documentation in detail.
+
+## Performance
+
+Internally, two distribution builders are used depending on the modifiers used. These two distributions use convolutions and discrete keys, respectively. The convolution builder is significantly faster (up to 100x performance for certain expressions), but is also more limited. Depending on which builder is used, performance may change drastically.
+
+More specifically, the discrete key builder is used in the following cases:
+
+- The `e` and `ra` modifiers are used.
+- The `h` and `l` selectors are used for any modifier.
+
+Care should thus be taken in these scenarios, as the execution time can exponentially increase with the number of dice and the number of sides the dice have. This library does not utilize any internal limits, and it is up to the user to avoid overly complex expressions.
+
+## Using the library interactively
+
+In order to test the library or to visualize distributions, the library can be used interactively by using the command
+
+```bash
+python -m d20distribution
+```
+
+This opens up a command prompt for the user where they can input distributions, which will visualize the distribution.
