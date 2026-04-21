@@ -471,3 +471,51 @@ def test_disadvantage_4():
     ]
 
     assert_distribution(distribution, values)
+
+
+def test_binops_lt():
+    distribution = parse("1d6 < 1d8")
+
+    # Verified using anydice.com
+    values = [(0, 0.4375), (1, 0.5625)]
+    assert_distribution(distribution, values)
+
+
+def test_binops_le():
+    distribution = parse("1d6 <= 1d8")
+
+    # Verified using anydice.com
+    values = [(0, 0.3125), (1, 0.6875)]
+    assert_distribution(distribution, values)
+
+
+def test_binops_gt():
+    distribution = parse("1d6 > 1d8")
+
+    # Verified using anydice.com
+    values = [(0, 0.6875), (1, 0.3125)]
+    assert_distribution(distribution, values)
+
+
+def test_binops_ge():
+    distribution = parse("1d6 >= 1d8")
+
+    # Verified using anydice.com
+    values = [(0, 0.5625), (1, 0.4375)]
+    assert_distribution(distribution, values)
+
+
+def test_binops_eq():
+    distribution = parse("1d6 == 1d8")
+
+    # Verified using anydice.com
+    values = [(0, 0.8750), (1, 0.1250)]
+    assert_distribution(distribution, values)
+
+
+def test_binops_neq():
+    distribution = parse("1d6 != 1d8")
+
+    # Verified using anydice.com
+    values = [(0, 0.1250), (1, 0.8750)]
+    assert_distribution(distribution, values)

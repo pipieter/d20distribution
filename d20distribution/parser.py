@@ -83,6 +83,19 @@ def _parse_ast(ast: d20.ast.Node) -> Distribution:
             return _parse_ast(ast.left) * _parse_ast(ast.right)  # type: ignore
         if ast.op == "/":
             return _parse_ast(ast.left) // _parse_ast(ast.right)  # type: ignore
+        if ast.op == ">":
+            return _parse_ast(ast.left) > _parse_ast(ast.right)  # type: ignore
+        if ast.op == ">=":
+            return _parse_ast(ast.left) >= _parse_ast(ast.right)  # type: ignore
+        if ast.op == "<":
+            return _parse_ast(ast.left) < _parse_ast(ast.right)  # type: ignore
+        if ast.op == "<=":
+            return _parse_ast(ast.left) <= _parse_ast(ast.right)  # type: ignore
+        if ast.op == "==":
+            return _parse_ast(ast.left).equals(_parse_ast(ast.right))  # type: ignore
+        if ast.op == "!=":
+            return _parse_ast(ast.left).not_equals(_parse_ast(ast.right))  # type: ignore
+
         raise DiceParseError(f"Unsupported BinOp operator '{ast.op}'.")
 
     if isinstance(ast, d20.ast.Parenthetical):
