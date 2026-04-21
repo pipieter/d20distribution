@@ -512,6 +512,7 @@ def test_binops_eq():
     values = [(0, 0.8750), (1, 0.1250)]
     assert_distribution(distribution, values)
 
+
 def test_binops_neq():
     distribution = parse("1d6 != 1d8")
 
