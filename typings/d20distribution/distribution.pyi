@@ -135,6 +135,72 @@ class Distribution:
         """
         ...
 
+    def __lt__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the less than operator, e.g. 1d6 < 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting less than comparison.
+        """
+        ...
+
+    def __le__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the less than or equal operator, e.g. 1d6 <= 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting less than or equal comparison.
+        """
+        ...
+
+    def __gt__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the greater than operator, e.g. 1d6 > 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting greater than comparison.
+        """
+        ...
+
+    def __ge__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the greater or equal than operator, e.g. 1d6 >= 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting greater or equal than comparison.
+        """
+        ...
+
+    def equals(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the equality operator, e.g. 1d6 == 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison
+
+        Returns:
+            Distribution: The resulting equality comparison.
+        """
+        ...
+
+    def not_equals(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the inequality operator, e.g. 1d6 != 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison
+
+        Returns:
+            Distribution: The resulting inequality comparison.
+        """
+        ...
+
     def __neg__(self) -> Distribution:
         """Negate the values of a distribution.
 
