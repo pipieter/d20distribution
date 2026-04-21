@@ -181,6 +181,72 @@ class Distribution(object):
         """
         return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: a // b))
 
+    def __lt__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the less than operator, e.g. 1d6 < 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting less than comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a < b)))
+
+    def __le__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the less than or equal operator, e.g. 1d6 <= 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting less than or equal comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a <= b)))
+
+    def __gt__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the greater than operator, e.g. 1d6 > 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting greater than comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a > b)))
+
+    def __ge__(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the greater or equal than operator, e.g. 1d6 >= 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison.
+
+        Returns:
+            Distribution: The resulting greater or equal than comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a >= b)))
+
+    def equals(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the equality operator, e.g. 1d6 == 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison
+
+        Returns:
+            Distribution: The resulting equality comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a == b)))
+
+    def not_equals(self, other: "Distribution") -> "Distribution":
+        """Compare two distributions using the inequality operator, e.g. 1d6 != 1d8.
+
+        Args:
+            other (Distribution): The other distribution in the comparison
+
+        Returns:
+            Distribution: The resulting inequality comparison.
+        """
+        return Distribution(_combine_dictionaries(self._dist, other._dist, lambda a, b: int(a != b)))
+
     def __neg__(self) -> "Distribution":
         """Negate the values of a distribution.
 
