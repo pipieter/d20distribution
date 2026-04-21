@@ -16,7 +16,7 @@ print(distribution.get(5)) # 0.125
 print(distribution.mean()) # 8.50
 ```
 
-## Unsupported Syntax
+## Supported Syntax
 
 All valid [d20](https://pypi.org/project/d20/) expressions are supported, and it is suggested for the user to check their documentation in detail.
 
