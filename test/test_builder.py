@@ -17,7 +17,7 @@ from d20distribution.calculate import (
 
 def operator(op: str, sel: tuple[str | None, int]):
     cat, num = sel
-    return d20.ast.SetOperator(op, [d20.ast.SetSelector(cat, num)])
+    return d20.ast.Operator(op, [d20.ast.Selector(cat, num)])
 
 
 @pytest.mark.parametrize("count", [1, 2, 3, 4])
@@ -46,7 +46,7 @@ def operator(op: str, sel: tuple[str | None, int]):
         [operator("mi", (None, 2)), operator("k", (">", 3))],
     ],
 )
-def test_builders(count: int, sides: int, operators: list[d20.ast.SetOperator]):
+def test_builders(count: int, sides: int, operators: list[d20.ast.Operator]):
     convolution = ConvolutionDistributionBuilder(count, sides, operators).distribution()
     discrete = DiscreteDistributionBuilder(count, sides, operators).distribution()
 

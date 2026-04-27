@@ -1,4 +1,4 @@
-d20==1.1.2
+d20 @ git+https://github.com/pipieter/d20lenny@main
 pytest==9.0.2
 pytest-benchmark==5.2.3
-numpy==2.4.1
+numpy==2.4.4
