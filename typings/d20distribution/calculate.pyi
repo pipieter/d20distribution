@@ -17,12 +17,12 @@ class AbstractDistributionBuilder(abc.ABC):
         """
         ...
 
-    def apply_operation(self, op: d20.ast.SetOperator) -> None:
+    def apply_operation(self, op: d20.ast.Operator) -> None:
         """Apply a valid d20 operator to the current distribution. This internally  changes the
         state of the builder
 
         Args:
-            op (d20.ast.SetOperator): The operator to be applied.
+            op (d20.ast.Operator): The operator to be applied.
 
         Raises:
             InvalidOperationError: When the operation in question is unknown or not supported.
@@ -30,65 +30,65 @@ class AbstractDistributionBuilder(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_mi(self, selectors: list[d20.ast.SetSelector]) -> None:
+    def apply_mi(self, selectors: list[d20.ast.Selector]) -> None:
         """Apply the d20 minimum operator to the builder.
 
         Args:
-            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `mi` operator.
+            selectors (list[d20.ast.Selector]): A list of valid d20 selectors matching the `mi` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_ma(self, selectors: list[d20.ast.SetSelector]) -> None:
+    def apply_ma(self, selectors: list[d20.ast.Selector]) -> None:
         """Apply the d20 maximum operator to the builder.
 
         Args:
-            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `ma` operator.
+            selectors (list[d20.ast.Selector]): A list of valid d20 selectors matching the `ma` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_ro(self, selectors: list[d20.ast.SetSelector]) -> None:
+    def apply_ro(self, selectors: list[d20.ast.Selector]) -> None:
         """Apply the d20 re-roll once operator to the builder.
 
         Args:
-            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `ro` operator.
+            selectors (list[d20.ast.Selector]): A list of valid d20 selectors matching the `ro` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None:
+    def apply_e(self, selectors: list[d20.ast.Selector]) -> None:
         """Apply the d20 explode operator to the builder.
 
         Args:
-            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `e` operator.
+            selectors (list[d20.ast.Selector]): A list of valid d20 selectors matching the `e` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_k(self, selectors: list[d20.ast.SetSelector]) -> None:
+    def apply_k(self, selectors: list[d20.ast.Selector]) -> None:
         """Apply the d20 keep operator to the builder.
 
         Args:
-            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `k` operator.
+            selectors (list[d20.ast.Selector]): A list of valid d20 selectors matching the `k` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_p(self, selectors: list[d20.ast.SetSelector]) -> None:
+    def apply_p(self, selectors: list[d20.ast.Selector]) -> None:
         """Apply the d20 drop operator to the builder.
 
         Args:
-            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `p` operator.
+            selectors (list[d20.ast.Selector]): A list of valid d20 selectors matching the `p` operator.
         """
         ...
 
     @abc.abstractmethod
-    def apply_ra(self, selectors: list[d20.ast.SetSelector]) -> None:
+    def apply_ra(self, selectors: list[d20.ast.Selector]) -> None:
         """Apply the d20 reroll and add operator to the builder.
 
         Args:
-            selectors (list[d20.ast.SetSelector]): A list of valid d20 selectors matching the `ra` operator.
+            selectors (list[d20.ast.Selector]): A list of valid d20 selectors matching the `ra` operator.
         """
         ...
 
@@ -109,36 +109,36 @@ class ConvolutionDistributionBuilder(AbstractDistributionBuilder):
     _count: int
     _sides: int
     _convolution: list[float]
-    def __init__(self, count: int, sides: int, operations: list[d20.ast.SetOperator]) -> None:
+    def __init__(self, count: int, sides: int, operations: list[d20.ast.Operator]) -> None:
         """Create a convolution distribution builder.
 
         Args:
             count (int): The number of dice in the expression.
             sides (int): The sides of the dice in the expression.
-            operations (list[d20.ast.SetOperator]): A list of operators to be applied to the expression.
+            operations (list[d20.ast.Operator]): A list of operators to be applied to the expression.
         """
         ...
 
     def distribution(self) -> Distribution: ...
     @staticmethod
-    def supports_operation(operation: d20.ast.SetOperator) -> bool:
+    def supports_operation(operation: d20.ast.Operator) -> bool:
         """Checks if the ConvolutionDistributionBuilder supports an operation.
 
         Args:
-            operation (d20.ast.SetOperator): The operation to be checked.
+            operation (d20.ast.Operator): The operation to be checked.
 
         Returns:
             bool: Whether the operation is supported.
         """
         ...
 
-    def apply_mi(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_ma(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_k(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_p(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_ro(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_ra(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_mi(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_ma(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_k(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_p(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_ro(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_e(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_ra(self, selectors: list[d20.ast.Selector]) -> None: ...
 
 DiscreteKey = tuple[int, ...]
 
@@ -146,21 +146,21 @@ class DiscreteDistributionBuilder(AbstractDistributionBuilder):
     _count: int
     _sides: int
     _dist: defaultdict[DiscreteKey, float]
-    def __init__(self, count: int, sides: int, operations: list[d20.ast.SetOperator]) -> None:
+    def __init__(self, count: int, sides: int, operations: list[d20.ast.Operator]) -> None:
         """Create a discrete distribution builder.
 
         Args:
             count (int): The number of dice in the expression.
             sides (int): The sides of the dice in the expression.
-            operations (list[d20.ast.SetOperator]): A list of operators to be applied to the expression.
+            operations (list[d20.ast.Operator]): A list of operators to be applied to the expression.
         """
         ...
 
     def distribution(self) -> Distribution: ...
-    def apply_mi(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_ma(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_k(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_p(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_ro(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_e(self, selectors: list[d20.ast.SetSelector]) -> None: ...
-    def apply_ra(self, selectors: list[d20.ast.SetSelector]) -> None: ...
+    def apply_mi(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_ma(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_k(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_p(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_ro(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_e(self, selectors: list[d20.ast.Selector]) -> None: ...
+    def apply_ra(self, selectors: list[d20.ast.Selector]) -> None: ...

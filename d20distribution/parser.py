@@ -27,7 +27,7 @@ def parse(expression: str) -> Distribution:
     except Exception:
         raise DiceParseError("There was an error found while parsing the expression.")
 
-    ast = d20.parse(expression, allow_comments=False)
+    ast = d20.parse(expression)
     return _parse_ast(ast)
 
 
@@ -76,39 +76,34 @@ def _parse_ast(ast: d20.ast.Node) -> Distribution:
 
     if isinstance(ast, d20.ast.BinOp):
         if ast.op == "+":
-            return _parse_ast(ast.left) + _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) + _parse_ast(ast.right)
         if ast.op == "-":
-            return _parse_ast(ast.left) - _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) - _parse_ast(ast.right)
         if ast.op == "*":
-            return _parse_ast(ast.left) * _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) * _parse_ast(ast.right)
         if ast.op == "/":
-            return _parse_ast(ast.left) // _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) // _parse_ast(ast.right)
         if ast.op == ">":
-            return _parse_ast(ast.left) > _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) > _parse_ast(ast.right)
         if ast.op == ">=":
-            return _parse_ast(ast.left) >= _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) >= _parse_ast(ast.right)
         if ast.op == "<":
-            return _parse_ast(ast.left) < _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) < _parse_ast(ast.right)
         if ast.op == "<=":
-            return _parse_ast(ast.left) <= _parse_ast(ast.right)  # type: ignore
+            return _parse_ast(ast.left) <= _parse_ast(ast.right)
         if ast.op == "==":
-            return _parse_ast(ast.left).equals(_parse_ast(ast.right))  # type: ignore
+            return _parse_ast(ast.left).equals(_parse_ast(ast.right))
         if ast.op == "!=":
-            return _parse_ast(ast.left).not_equals(_parse_ast(ast.right))  # type: ignore
+            return _parse_ast(ast.left).not_equals(_parse_ast(ast.right))
 
         raise DiceParseError(f"Unsupported BinOp operator '{ast.op}'.")
 
     if isinstance(ast, d20.ast.Parenthetical):
-        return _parse_ast(ast.value)  # type: ignore
+        return _parse_ast(ast.value)
 
     if isinstance(ast, d20.ast.Dice):
         count, sides = _parse_dimensions(ast.num, ast.size)
-        builder = ConvolutionDistributionBuilder(count, sides, [])
-        return builder.distribution()
-
-    if isinstance(ast, d20.ast.OperatedDice):
-        count, sides = _parse_dimensions(ast.value.num, ast.value.size)  # type: ignore
-        operations: list[d20.ast.SetOperator] = ast.operations  # type: ignore
+        operations = ast.operations
 
         contains_non_convolution_operation = any(not ConvolutionDistributionBuilder.supports_operation(op) for op in operations)
 
